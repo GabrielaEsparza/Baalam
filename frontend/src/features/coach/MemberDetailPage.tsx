@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Banknote, CalendarCog, ClipboardList, MessageCircle, Pause, Play, ShieldCheck, Trash2, UserCheck, UserX } from "lucide-react";
+import { ArrowLeft, Banknote, CalendarCog, Copy, KeyRound, Send, ClipboardList, MessageCircle, Pause, Play, ShieldCheck, Trash2, UserCheck, UserX } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { CoachNutritionCard } from "@/features/nutrition/CoachNutritionCard";
 import { api, unwrap } from "@/api/client";
@@ -16,7 +16,9 @@ export default function MemberDetailPage() {
   const isAdmin = !!me?.features.admin;
   const qc = useQueryClient();
   const toast = useToast();
-  const [paySheet, setPaySheet] = useState(false);
+  const loc = useLocation() as { state?: { justCreated?: boolean; accessLink?: string } };
+  const justCreated = !!loc.state?.justCreated;
+  const [paySheet, setPaySheet] = useState(justCreated && !!me?.features.admin);
   const [fixSheet, setFixSheet] = useState(false);
   const [delPay, setDelPay] = useState<number | null>(null);
   const [notes, setNotes] = useState<string | null>(null);
@@ -104,6 +106,8 @@ export default function MemberDetailPage() {
           )}
         </div>
       </div>
+
+      {!m.has_password && <AccessCard memberId={id} name={m.full_name} phone={m.phone} initialLink={loc.state?.accessLink} />}
 
       {/* Membresía */}
       <Card className="space-y-4">
@@ -500,5 +504,64 @@ function FixMembershipSheet({
         </div>
       </div>
     </Sheet>
+  );
+}
+
+/** La persona aún no crea su contraseña: mandarle su enlace de acceso. */
+function AccessCard({ memberId, name, phone, initialLink }: { memberId: number; name: string; phone: string; initialLink?: string }) {
+  const toast = useToast();
+  const [link, setLink] = useState<string | null>(initialLink ?? null);
+  const gen = useMutation({
+    mutationFn: async () =>
+      (
+        (await unwrap(
+          api.POST("/api/coach/members/{member_id}/access-link", { params: { path: { member_id: memberId } } }),
+        )) as unknown as { access_link: string }
+      ).access_link,
+    onError: (e) => toast((e as Error).message, "error"),
+  });
+  const getLink = async (): Promise<string> => {
+    if (link) return link;
+    const l = await gen.mutateAsync();
+    setLink(l);
+    return l;
+  };
+  const first = name.split(" ")[0];
+  const message = (l: string) =>
+    `¡Hola ${first}! Bienvenid@ a BÁALAM GYM 💪\nCrea tu contraseña aquí para entrar a la app:\n${l}\n\nTu usuario es tu correo. El enlace vale 7 días.`;
+
+  async function sendWa() {
+    const l = await getLink();
+    const to = phone.replace(/\D/g, "");
+    window.open(waLink(to.length === 10 ? `52${to}` : to, message(l)), "_blank", "noopener");
+  }
+  async function copy() {
+    const l = await getLink();
+    try {
+      await navigator.clipboard.writeText(message(l));
+      toast("Mensaje copiado");
+    } catch {
+      toast(l);
+    }
+  }
+
+  return (
+    <Card className="mb-4 space-y-3 border-gold bg-gold/15">
+      <p className="flex items-center gap-2 font-semibold">
+        <KeyRound className="size-5 text-warning" /> Aún no crea su contraseña
+      </p>
+      <p className="text-[15px] text-ink-2">
+        Mándale su enlace de acceso. Con él crea su contraseña y entra con su correo. Vale 7 días; si caduca, mándalo de nuevo.
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <Button size="sm" icon={Send} loading={gen.isPending} disabled={!phone} onClick={sendWa}>
+          WhatsApp
+        </Button>
+        <Button size="sm" variant="secondary" icon={Copy} loading={gen.isPending} onClick={copy}>
+          Copiar mensaje
+        </Button>
+      </div>
+      {!phone && <p className="text-sm text-ink-2">No tiene teléfono: copia el mensaje y mándalo como prefieras.</p>}
+    </Card>
   );
 }

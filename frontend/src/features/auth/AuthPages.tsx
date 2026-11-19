@@ -35,7 +35,7 @@ export function LoginPage() {
   const { data: me } = useMe();
   const setMe = useSetMe();
   const nav = useNavigate();
-  const loc = useLocation() as { state?: { from?: string } };
+  const loc = useLocation() as { state?: { from?: string; msg?: string } };
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -70,6 +70,11 @@ export function LoginPage() {
         <Field label="Contraseña">
           <Input name="password" type="password" autoComplete="current-password" required />
         </Field>
+        {loc.state?.msg && !err && (
+          <p role="status" className="rounded-input bg-success/10 px-3 py-2 text-[15px] font-medium text-success">
+            {loc.state.msg}
+          </p>
+        )}
         <FormError msg={err} />
         <Button type="submit" full loading={busy}>
           Entrar
@@ -147,6 +152,7 @@ export function RecoverPage() {
   const [params] = useSearchParams();
   const uid = params.get("uid");
   const token = params.get("token");
+  const isNew = params.get("nuevo") === "1";
   const nav = useNavigate();
   const [err, setErr] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -164,7 +170,7 @@ export function RecoverPage() {
             body: { uid, token, password: String(fd.get("password")) },
           }),
         );
-        nav("/login", { replace: true });
+        nav("/login", { replace: true, state: { msg: isNew ? "¡Listo! Ya puedes entrar con tu correo y tu contraseña." : "Contraseña guardada. Ya puedes entrar." } });
       } else {
         await unwrap(api.POST("/api/auth/password-reset", { body: { email: String(fd.get("email")) } }));
         setSent(true);
@@ -177,7 +183,7 @@ export function RecoverPage() {
   }
 
   return (
-    <AuthLayout title="Recupera tu" accent="acceso">
+    <AuthLayout title={isNew ? "Crea tu" : "Recupera tu"} accent={isNew ? "contraseña" : "acceso"}>
       {sent ? (
         <p className="text-center text-[15px] text-ink-2">
           Si el correo existe, te enviamos un enlace para crear una nueva contraseña. Revisa tu bandeja y spam.
@@ -185,7 +191,7 @@ export function RecoverPage() {
       ) : (
         <form onSubmit={submit} className="space-y-4">
           {uid && token ? (
-            <Field label="Nueva contraseña" hint="Mínimo 8 caracteres.">
+            <Field label={isNew ? "Tu contraseña" : "Nueva contraseña"} hint="Mínimo 8 caracteres.">
               <Input name="password" type="password" autoComplete="new-password" required minLength={8} />
             </Field>
           ) : (
@@ -195,7 +201,7 @@ export function RecoverPage() {
           )}
           <FormError msg={err} />
           <Button type="submit" full loading={busy}>
-            {uid ? "Guardar contraseña" : "Enviar enlace"}
+            {uid ? (isNew ? "Crear contraseña" : "Guardar contraseña") : "Enviar enlace"}
           </Button>
         </form>
       )}

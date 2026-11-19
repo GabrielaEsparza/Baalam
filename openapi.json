@@ -1782,6 +1782,44 @@
             "SessionAuth": []
           }
         ]
+      },
+      "post": {
+        "operationId": "apps_accounts_api_create_member",
+        "summary": "Create Member",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "description": "Alta desde recepción: crea la cuenta y devuelve el enlace para que cree su contraseña.",
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewMemberIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
       }
     },
     "/api/coach/members/{member_id}": {
@@ -1859,6 +1897,46 @@
           },
           "required": true
         },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/members/{member_id}/access-link": {
+      "post": {
+        "operationId": "apps_accounts_api_member_access_link",
+        "summary": "Member Access Link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "schema": {
+              "title": "Member Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "description": "Vuelve a generar el enlace (si caducó o se perdió) mientras no haya creado su contraseña.",
+        "tags": [
+          "coach"
+        ],
         "security": [
           {
             "SessionAuth": []
@@ -5773,6 +5851,29 @@
         "title": "MemberRow",
         "type": "object"
       },
+      "NewMemberIn": {
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "phone": {
+            "default": "",
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "full_name",
+          "email"
+        ],
+        "title": "NewMemberIn",
+        "type": "object"
+      },
       "MemberDetail": {
         "properties": {
           "id": {
@@ -5891,6 +5992,11 @@
               }
             ],
             "title": "Start Date"
+          },
+          "has_password": {
+            "default": true,
+            "title": "Has Password",
+            "type": "boolean"
           },
           "payments": {
             "items": {

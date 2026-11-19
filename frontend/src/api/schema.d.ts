@@ -743,7 +743,11 @@ export interface paths {
         /** Members */
         get: operations["apps_accounts_api_members"];
         put?: never;
-        post?: never;
+        /**
+         * Create Member
+         * @description Alta desde recepción: crea la cuenta y devuelve el enlace para que cree su contraseña.
+         */
+        post: operations["apps_accounts_api_create_member"];
         delete?: never;
         options?: never;
         head?: never;
@@ -766,6 +770,26 @@ export interface paths {
         head?: never;
         /** Member Patch */
         patch: operations["apps_accounts_api_member_patch"];
+        trace?: never;
+    };
+    "/api/coach/members/{member_id}/access-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Member Access Link
+         * @description Vuelve a generar el enlace (si caducó o se perdió) mientras no haya creado su contraseña.
+         */
+        post: operations["apps_accounts_api_member_access_link"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/coach/members/{member_id}/approve": {
@@ -2080,6 +2104,18 @@ export interface components {
             /** Last Checkin */
             last_checkin: string | null;
         };
+        /** NewMemberIn */
+        NewMemberIn: {
+            /** Full Name */
+            full_name: string;
+            /** Email */
+            email: string;
+            /**
+             * Phone
+             * @default
+             */
+            phone: string;
+        };
         /** MemberDetail */
         MemberDetail: {
             /** Id */
@@ -2117,6 +2153,11 @@ export interface components {
             membership_id: number | null;
             /** Start Date */
             start_date?: string | null;
+            /**
+             * Has Password
+             * @default true
+             */
+            has_password: boolean;
             /** Payments */
             payments: {
                 [key: string]: unknown;
@@ -3618,6 +3659,32 @@ export interface operations {
             };
         };
     };
+    apps_accounts_api_create_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewMemberIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
     apps_accounts_api_member_detail: {
         parameters: {
             query?: never;
@@ -3662,6 +3729,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MemberDetail"];
+                };
+            };
+        };
+    };
+    apps_accounts_api_member_access_link: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                member_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };

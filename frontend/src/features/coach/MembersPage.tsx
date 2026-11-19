@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, Search, Users } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronRight, Search, UserPlus, Users } from "lucide-react";
 import { api, unwrap } from "@/api/client";
 import { Avatar } from "@/components/Avatar";
-import { Card, EmptyState, ErrorBox, Input, PageTitle, Spinner, StatusBadge, cx } from "@/components/ui";
+import { Button, Card, EmptyState, ErrorBox, Field, Input, PageTitle, Sheet, Spinner, StatusBadge, cx } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 import { fmtDate } from "@/lib/format";
 
 const FILTERS = [
@@ -19,6 +20,7 @@ const FILTERS = [
 export default function MembersPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
+  const [adding, setAdding] = useState(false);
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["coach", "members", q, status],
     queryFn: () => unwrap(api.GET("/api/coach/members", { params: { query: { q, status } } })),
@@ -28,6 +30,10 @@ export default function MembersPage() {
   return (
     <div>
       <PageTitle>Miembros</PageTitle>
+      <Button full icon={UserPlus} className="mb-4" onClick={() => setAdding(true)}>
+        Agregar miembro
+      </Button>
+      <AddMemberSheet open={adding} onClose={() => setAdding(false)} />
       <div className="relative mb-3">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 size-5 -translate-y-1/2 text-ink-2" />
         <Input
@@ -78,5 +84,73 @@ export default function MembersPage() {
         </Card>
       )}
     </div>
+  );
+}
+
+/** Alta desde recepción: nombre, correo y teléfono. La persona crea su contraseña con un enlace. */
+function AddMemberSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const nav = useNavigate();
+  const qc = useQueryClient();
+  const toast = useToast();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+
+  const create = useMutation({
+    mutationFn: async () =>
+      (await unwrap(
+        api.POST("/api/coach/members", { body: { full_name: name.trim(), email: email.trim(), phone: phone.trim() } }),
+      )) as unknown as { id: number; access_link: string },
+    onSuccess: (r) => {
+      qc.invalidateQueries({ queryKey: ["coach", "members"] });
+      toast("Miembro agregado");
+      setName("");
+      setEmail("");
+      setPhone("");
+      onClose();
+      nav(`/coach/miembros/${r.id}`, { state: { justCreated: true, accessLink: r.access_link } });
+    },
+    onError: (e) => toast((e as Error).message, "error"),
+  });
+
+  const validEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
+  return (
+    <Sheet open={open} onClose={onClose} title="Agregar miembro">
+      <form
+        className="space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (name.trim().length >= 2 && validEmail) create.mutate();
+        }}
+      >
+        <Field label="Nombre completo">
+          <Input value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" required minLength={2} />
+        </Field>
+        <Field label="Correo" hint="Con este correo entrará a la app.">
+          <Input
+            type="email"
+            inputMode="email"
+            autoComplete="off"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </Field>
+        <Field label="WhatsApp (10 dígitos)" hint="Para mandarle su acceso.">
+          <Input
+            type="tel"
+            inputMode="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value.replace(/[^\d]/g, "").slice(0, 13))}
+          />
+        </Field>
+        <Button type="submit" full loading={create.isPending} disabled={name.trim().length < 2 || !validEmail}>
+          Crear cuenta
+        </Button>
+        <p className="text-sm text-ink-2">
+          Después registras su pago y le mandas por WhatsApp un enlace para que cree su contraseña. Tú nunca la conoces.
+        </p>
+      </form>
+    </Sheet>
   );
 }

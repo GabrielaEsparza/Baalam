@@ -131,6 +131,7 @@ class MemberDetail(MemberRow):
     sessions_per_week: int | None
     membership_id: int | None
     start_date: date | None = None
+    has_password: bool = True
     payments: list[dict]
     recent_checkins: list[datetime]
 

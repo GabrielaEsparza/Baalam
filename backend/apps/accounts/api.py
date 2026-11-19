@@ -309,6 +309,7 @@ def member_detail(request, member_id: int):
         "sessions_per_week": m.sessions_per_week if m else None,
         "membership_id": m.id if m else None,
         "start_date": m.start_date if m else None,
+        "has_password": p.user.has_usable_password(),
         "payments": (
             list(p.user.payments.values("id", "amount_mxn", "method", "paid_at", "note")[:24]) if pays else []
         ),
@@ -339,6 +340,30 @@ def member_patch(request, member_id: int, data: MemberPatch):
             m.sessions_per_week = d["sessions_per_week"]
             m.save(update_fields=["sessions_per_week", "updated_at"])
     return member_detail(request, member_id)
+
+
+class NewMemberIn(Schema):
+    full_name: str
+    email: str
+    phone: str = ""
+
+
+@coach_router.post("/members", response={201: dict})
+@coach_required
+def create_member(request, data: NewMemberIn):
+    """Alta desde recepción: crea la cuenta y devuelve el enlace para que cree su contraseña."""
+    user = services.coach_create_member(**data.dict(), by=request.user)
+    return 201, {"id": user.id, "access_link": services.access_link(user, request.build_absolute_uri("/"))}
+
+
+@coach_router.post("/members/{member_id}/access-link", response=dict)
+@coach_required
+def member_access_link(request, member_id: int):
+    """Vuelve a generar el enlace (si caducó o se perdió) mientras no haya creado su contraseña."""
+    user = get_object_or_404(User, id=member_id)
+    if user.has_usable_password():
+        raise HttpError(400, "Esta persona ya creó su contraseña. Si la olvidó, que use «¿Olvidaste tu contraseña?».")
+    return {"access_link": services.access_link(user, request.build_absolute_uri("/"))}
 
 
 @coach_router.post("/members/{member_id}/approve")

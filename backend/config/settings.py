@@ -126,6 +126,8 @@ if os.environ.get("BUCKET_NAME"):
     }
 
 # Sesión en cookie + CSRF (mismo dominio para React y API)
+# Enlaces para crear/recuperar contraseña: 7 días (la coach los manda por WhatsApp).
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 60  # 60 días: el miembro no debe loguearse cada vez
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"

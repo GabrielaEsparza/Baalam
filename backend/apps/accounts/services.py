@@ -202,3 +202,40 @@ def coach_stats(months: int = 6, on=None) -> dict:
             "payments_total": prev_pays["total"] or 0,
         },
     }
+
+
+@transaction.atomic
+def coach_create_member(*, full_name: str, email: str, phone: str = "", by=None):
+    """La coach da de alta a alguien en recepción. La cuenta nace sin contraseña:
+    la persona la crea con el enlace de acceso (access_link). Queda pendiente hasta el primer pago."""
+    from django.core.validators import validate_email
+
+    full_name = (full_name or "").strip()
+    email = (email or "").strip().lower()
+    if len(full_name) < 2:
+        raise ServiceError("Escribe el nombre completo.")
+    try:
+        validate_email(email)
+    except ValidationError:
+        raise ServiceError("Escribe un correo válido.", "bad_email")
+    if User.objects.filter(username=email).exists():
+        raise ServiceError("Ya existe una cuenta con ese correo.", "email_taken")
+    user = User.objects.create_user(username=email, email=email)
+    user.set_unusable_password()
+    user.save()
+    profile = get_profile(user)
+    profile.full_name = full_name
+    profile.phone = (phone or "").strip()
+    profile.save()
+    return user
+
+
+def access_link(user, base_url: str) -> str:
+    """Enlace para crear (o cambiar) su contraseña. Vale PASSWORD_RESET_TIMEOUT y se invalida al usarse."""
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.encoding import force_bytes
+    from django.utils.http import urlsafe_base64_encode
+
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    return f"{base_url.rstrip('/')}/recuperar?uid={uid}&token={token}&nuevo=1"
