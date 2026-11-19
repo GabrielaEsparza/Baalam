@@ -1,13 +1,20 @@
 import { useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarCheck, Clock, Dumbbell, MapPin, MessageCircle, TrendingUp, Trophy } from "lucide-react";
+import { CalendarCheck, ChevronRight, Clock, Dumbbell, MapPin, MessageCircle, TrendingUp, Trophy } from "lucide-react";
 import { api, unwrap } from "@/api/client";
 import { useMe } from "@/app/session";
+import { cx } from "@/components/ui";
 import { fmtMoney, waLink } from "@/lib/format";
 
-/** Frase de marca del hero: cámbiala aquí. La palabra en `accent` va en naranja. */
-const HERO = { before: "Disciplina", accent: "sobre", after: "motivación" };
+/** Frase del hero: cada línea con su color. Cámbiala aquí. */
+const QUOTE: [string, string][] = [
+  ["No busques", "text-white"],
+  ["motivación.", "text-fire"],
+  ["Construye", "text-white"],
+  ["disciplina.", "text-orchid"],
+];
+const QUOTE_AUTHOR = "Melissa Zacarías";
 
 export default function Landing() {
   const { data: me } = useMe();
@@ -28,49 +35,67 @@ export default function Landing() {
   return (
     <div className="min-h-dvh bg-night text-white">
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-60"
-          style={{
-            background:
-              "radial-gradient(60% 50% at 50% 30%, rgb(91 42 134 / 0.55), transparent 70%), radial-gradient(40% 30% at 80% 70%, rgb(224 90 0 / 0.18), transparent 70%)",
-          }}
-        />
-        <div className="relative mx-auto flex min-h-[92dvh] max-w-5xl flex-col items-center justify-center px-4 py-12 text-center">
+      <section className="relative isolate overflow-hidden">
+        {/* Fondo: logo difuminado + brillo naranja abajo */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
           <img
             src="/logo.webp"
-            alt="BÁALAM GYM"
-            width={720}
-            height={720}
-            className="w-[min(78vw,380px)] mix-blend-lighten"
+            alt=""
+            className="absolute left-1/2 top-[52%] w-[min(130vw,760px)] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-[0.13] blur-[1px] grayscale-[35%]"
           />
-          <h1 className="t-display mt-4 text-[44px] lg:text-[72px]">
-            {HERO.before} <span className="text-fire">{HERO.accent}</span> {HERO.after}
-          </h1>
-          <p className="mt-3 max-w-md text-[17px] text-[#B8AEC2]">
-            Entrenamiento funcional con rutina hecha por tu coach. Llega, registra tu asistencia y mide tu avance.
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, rgb(18 10 28 / 0.55) 0%, rgb(18 10 28 / 0.2) 45%, rgb(18 10 28 / 0.75) 80%), radial-gradient(90% 35% at 50% 105%, rgb(224 90 0 / 0.38), transparent 70%), radial-gradient(70% 45% at 30% 20%, rgb(91 42 134 / 0.35), transparent 70%)",
+            }}
+          />
+        </div>
+
+        <div className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center px-6 py-12">
+          <div className="mb-10 size-24 overflow-hidden rounded-full bg-black shadow-[0_0_40px_rgb(176_79_155_/_0.35)] ring-2 ring-orchid/70 ring-offset-4 ring-offset-night">
+            <img src="/logo.webp" alt="BÁALAM GYM" width={720} height={720} className="size-full scale-[0.97] object-cover" />
+          </div>
+
+          <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.25em] text-fire">
+            <span aria-hidden className="h-0.5 w-8 rounded-full bg-fire" /> Entrenamiento funcional
           </p>
-          <div className="mt-8 flex w-full max-w-sm flex-col gap-3">
+
+          <h1 className="mt-5 text-[44px] leading-[1.02] font-normal uppercase tracking-tight sm:text-[56px]">
+            {QUOTE.map(([text, tone]) => (
+              <span key={text} className={cx("block", tone)}>
+                {text}
+              </span>
+            ))}
+          </h1>
+          <p className="mt-4 text-[15px] font-semibold text-orchid">— {QUOTE_AUTHOR}</p>
+
+          <p className="mt-6 max-w-md text-[17px] leading-relaxed text-[#C9B8D6]">
+            Entrenamiento funcional, nutrición y comunidad para convertir tus objetivos en hábitos.
+          </p>
+
+          <div className="mt-10 flex w-full max-w-sm flex-col gap-3">
             <Link
               to="/login"
-              className="flex h-[52px] items-center justify-center rounded-btn bg-fire-600 text-[15px] font-semibold uppercase tracking-wide text-white hover:brightness-110"
+              className="flex h-[56px] items-center justify-center gap-2 rounded-btn border border-white/10 bg-white/10 text-[15px] font-bold uppercase tracking-wide text-white backdrop-blur-sm transition hover:bg-white/15"
             >
-              Iniciar sesión
+              Iniciar sesión <ChevronRight className="size-5" strokeWidth={2} />
             </Link>
-            {wa && (
-              <a
-                href={wa}
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-[52px] items-center justify-center gap-2 rounded-btn border border-[#3A2B48] text-[15px] font-semibold uppercase tracking-wide text-white hover:bg-[#1E1428]"
-              >
-                <MessageCircle className="size-5" strokeWidth={1.75} /> Escribir por WhatsApp
-              </a>
-            )}
-            <Link to="/registro" className="py-2 text-[15px] font-medium text-[#D07BC0] underline-offset-4 hover:underline">
-              ¿Nuevo? Crea tu cuenta
-            </Link>
+            <div className="flex items-center justify-between gap-3 px-1">
+              <Link to="/registro" className="py-2 text-[15px] font-medium text-orchid underline-offset-4 hover:underline">
+                ¿Nuevo? Crea tu cuenta
+              </Link>
+              {wa && (
+                <a
+                  href={wa}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 py-2 text-[15px] font-medium text-[#C9B8D6] hover:text-white"
+                >
+                  <MessageCircle className="size-4" strokeWidth={1.75} /> WhatsApp
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </section>
