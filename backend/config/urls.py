@@ -6,6 +6,7 @@ from django.urls import path, re_path
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .api import api
+from .media import serve_media
 
 admin.site.site_header = "BÁALAM GYM · Admin"
 admin.site.site_title = "BÁALAM GYM"
@@ -36,4 +37,7 @@ urlpatterns = [
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # En producción: solo con sesión iniciada (y en Railway, desde el volumen montado en MEDIA_ROOT).
+    urlpatterns += [re_path(r"^media/(?P<path>.+)$", serve_media)]
 urlpatterns += [re_path(r"^(?!api/|admin/|static/|media/).*$", spa)]

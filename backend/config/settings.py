@@ -110,7 +110,8 @@ STORAGES = {
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# En Railway, un volumen montado aquí guarda las fotos entre deploys (el disco del contenedor se borra).
+MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT") or BASE_DIR / "media")
 
 if os.environ.get("BUCKET_NAME"):
     STORAGES["default"] = {

@@ -1,5 +1,5 @@
-import { forwardRef, useEffect, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
-import { Loader2, Minus, Plus, X, type LucideIcon } from "lucide-react";
+import { forwardRef, useEffect, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
+import { Eye, EyeOff, Loader2, Minus, Plus, X, type LucideIcon } from "lucide-react";
 
 export function cx(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(" ");
@@ -128,6 +128,28 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
     />
   );
 });
+
+/** Contraseña con botón de ojito para mostrarla u ocultarla. */
+export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputHTMLAttributes<HTMLInputElement>, "type">>(
+  function PasswordInput({ className, ...rest }, ref) {
+    const [show, setShow] = useState(false);
+    const Icon = show ? EyeOff : Eye;
+    return (
+      <div className="relative">
+        <Input ref={ref} type={show ? "text" : "password"} className={cx("pr-12", className)} {...rest} />
+        <button
+          type="button"
+          onClick={() => setShow((v) => !v)}
+          aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
+          aria-pressed={show}
+          className="absolute inset-y-0 right-0 grid w-12 place-items-center rounded-r-input text-ink-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-orchid"
+        >
+          <Icon className="size-5" strokeWidth={1.75} />
+        </button>
+      </div>
+    );
+  },
+);
 
 export function Field({
   label,

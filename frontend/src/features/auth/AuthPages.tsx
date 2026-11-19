@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react
 import { ArrowLeft } from "lucide-react";
 import { api, unwrap } from "@/api/client";
 import { useMe, useSetMe } from "@/app/session";
-import { Button, Field, Input } from "@/components/ui";
+import { Button, Field, Input, PasswordInput } from "@/components/ui";
 
 function AuthLayout({ title, accent, children }: { title: string; accent?: string; children: ReactNode }) {
   return (
@@ -68,7 +68,7 @@ export function LoginPage() {
           <Input name="email" type="email" autoComplete="email" required inputMode="email" />
         </Field>
         <Field label="Contraseña">
-          <Input name="password" type="password" autoComplete="current-password" required />
+          <PasswordInput name="password" autoComplete="current-password" required />
         </Field>
         {loc.state?.msg && !err && (
           <p role="status" className="rounded-input bg-success/10 px-3 py-2 text-[15px] font-medium text-success">
@@ -136,7 +136,7 @@ export function RegisterPage() {
           <Input name="phone" type="tel" autoComplete="tel" required inputMode="tel" minLength={10} />
         </Field>
         <Field label="Contraseña" hint="Mínimo 8 caracteres.">
-          <Input name="password" type="password" autoComplete="new-password" required minLength={8} />
+          <PasswordInput name="password" autoComplete="new-password" required minLength={8} />
         </Field>
         <FormError msg={err} />
         <Button type="submit" full loading={busy}>
@@ -192,7 +192,7 @@ export function RecoverPage() {
         <form onSubmit={submit} className="space-y-4">
           {uid && token ? (
             <Field label={isNew ? "Tu contraseña" : "Nueva contraseña"} hint="Mínimo 8 caracteres.">
-              <Input name="password" type="password" autoComplete="new-password" required minLength={8} />
+              <PasswordInput name="password" autoComplete="new-password" required minLength={8} />
             </Field>
           ) : (
             <Field label="Correo">
