@@ -171,11 +171,31 @@ def item_payload(i: TemplateItem) -> dict:
         "order": i.order,
         "sets": i.sets,
         "reps": i.reps,
+        "reps_max": i.reps_max,
         "duration_s": i.duration_s,
         "target_weight_kg": i.target_weight_kg,
         "rest_s": i.rest_s,
+        "superset_group": i.superset_group,
         "notes": i.notes,
     }
+
+
+def normalize_groups(groups: list[str]) -> list[str]:
+    """Superseries: solo cuentan ejercicios SEGUIDOS con la misma marca. Se renombran A, B, C…
+    en orden; una marca suelta (sin vecino igual) se borra."""
+    out = [""] * len(groups)
+    letter, i = 0, 0
+    while i < len(groups):
+        j = i
+        while groups[i] and j + 1 < len(groups) and groups[j + 1] == groups[i]:
+            j += 1
+        if j > i:
+            name = chr(ord("A") + letter % 26)
+            letter += 1
+            for k in range(i, j + 1):
+                out[k] = name
+        i = j + 1
+    return out
 
 
 @transaction.atomic
@@ -197,16 +217,24 @@ def save_day(member, weekday: int, *, label: str, focus: str, items: list[dict],
     if missing := set(ids) - found:
         raise ServiceError(f"Ejercicio no encontrado: {sorted(missing)}", "not_found", 404)
     day.items.all().delete()
+    groups = normalize_groups([it.get("superset_group") or "" for it in items])
     for n, it in enumerate(items):
+        reps, reps_max = it.get("reps"), it.get("reps_max")
+        if it.get("duration_s"):
+            reps = reps_max = None
+        if reps_max is not None and (reps is None or reps_max <= reps):
+            reps_max = None  # "8–8" o rango al revés: se queda solo el número
         TemplateItem.objects.create(
             day=day,
             exercise_id=it["exercise_id"],
             order=n,
             sets=max(1, min(int(it.get("sets") or 3), 20)),
-            reps=it.get("reps"),
+            reps=reps,
+            reps_max=reps_max,
             duration_s=it.get("duration_s"),
             target_weight_kg=it.get("target_weight_kg"),
-            rest_s=max(0, min(int(it.get("rest_s") or 90), 900)),
+            rest_s=max(0, min(int(it.get("rest_s") if it.get("rest_s") is not None else 90), 900)),
+            superset_group=groups[n],
             notes=(it.get("notes") or "")[:200],
         )
     if not items and not day.label and not day.focus:
@@ -224,9 +252,11 @@ def copy_day(member, from_weekday: int, to_weekday: int, by=None) -> dict:
             "exercise_id": i["exercise"]["id"],
             "sets": i["sets"],
             "reps": i["reps"],
+            "reps_max": i["reps_max"],
             "duration_s": i["duration_s"],
             "target_weight_kg": i["target_weight_kg"],
             "rest_s": i["rest_s"],
+            "superset_group": i["superset_group"],
             "notes": i["notes"],
         }
         for i in d["items"]

@@ -2468,6 +2468,8 @@ export interface components {
             sets: number;
             /** Reps */
             reps?: number | null;
+            /** Reps Max */
+            reps_max?: number | null;
             /** Duration S */
             duration_s?: number | null;
             /** Target Weight Kg */
@@ -2477,6 +2479,11 @@ export interface components {
              * @default 90
              */
             rest_s: number;
+            /**
+             * Superset Group
+             * @default
+             */
+            superset_group: string;
             /**
              * Notes
              * @default

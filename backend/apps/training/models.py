@@ -71,10 +71,13 @@ class ItemFields(models.Model):
     order = models.PositiveSmallIntegerField(default=0)
     sets = models.PositiveSmallIntegerField(default=3)
     reps = models.PositiveSmallIntegerField(null=True, blank=True)
+    reps_max = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Rango: reps–reps_max (8–10)")
     duration_s = models.PositiveIntegerField(null=True, blank=True)
     target_weight_kg = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     rest_s = models.PositiveSmallIntegerField(default=90)
-    superset_group = models.CharField(max_length=4, blank=True)
+    superset_group = models.CharField(
+        max_length=4, blank=True, help_text="Ejercicios seguidos con la misma letra se alternan serie por serie"
+    )
     notes = models.CharField(max_length=200, blank=True)
 
     class Meta:

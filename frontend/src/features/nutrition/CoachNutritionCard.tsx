@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap } from "@/api/client";
 import { Button, Card, Input, SectionTitle } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { fmtN, type DaySummary } from "./nutri";
+import { GENERAL_IDEAL, MACROS, fmtN, gramsFromPct, pctFromGrams, type DaySummary, type MacroPct } from "./nutri";
 
 const FIELDS = [
   ["kcal", "kcal"],
@@ -23,9 +23,28 @@ export function CoachNutritionCard({ memberId }: { memberId: number }) {
       (await unwrap(api.GET("/api/coach/members/{member_id}/nutrition", { params: { path: { member_id: memberId } } }))) as unknown as DaySummary,
   });
   const [v, setV] = useState<Record<string, string>>({});
+  // Reparto de macros que se respeta al cambiar las kcal (los gramos nunca exceden las calorías).
+  const [split, setSplit] = useState<MacroPct | null>(null);
   useEffect(() => {
-    if (data) setV(Object.fromEntries(FIELDS.map(([k]) => [k, data.goal[k]?.toString() ?? ""])));
+    if (data) {
+      setV(Object.fromEntries(FIELDS.map(([k]) => [k, data.goal[k]?.toString() ?? ""])));
+      setSplit(pctFromGrams(data.goal));
+    }
   }, [data]);
+
+  function change(k: string, raw: string) {
+    const val = raw.replace(/\D/g, "").slice(0, k === "kcal" ? 5 : 4);
+    if (k === "kcal") {
+      const g = Number(val) > 0 ? gramsFromPct(Number(val), split ?? GENERAL_IDEAL.pct) : null;
+      setV((s) => ({ ...s, kcal: val, ...(g ? Object.fromEntries(MACROS.map((m) => [m.key, String(g[m.key])])) : {}) }));
+      return;
+    }
+    const next = { ...v, [k]: val };
+    const grams = Object.fromEntries(MACROS.map((m) => [m.key, Number(next[m.key]) || 0]));
+    const total = MACROS.reduce((a, m) => a + grams[m.key] * m.kcalPerG, 0);
+    setSplit(pctFromGrams(grams));
+    setV({ ...next, kcal: total > 0 ? String(Math.round(total)) : next.kcal });
+  }
 
   const save = useMutation({
     mutationFn: () =>
@@ -67,7 +86,7 @@ export function CoachNutritionCard({ memberId }: { memberId: number }) {
                 inputMode="numeric"
                 value={v[k] ?? ""}
                 placeholder="—"
-                onChange={(e) => setV((s) => ({ ...s, [k]: e.target.value.replace(/\D/g, "") }))}
+                onChange={(e) => change(k, e.target.value)}
                 className="!h-12 !px-1 text-center font-bold tabular-nums"
               />
             </label>

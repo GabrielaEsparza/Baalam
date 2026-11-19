@@ -141,9 +141,13 @@ export interface RoutineItem {
   order: number;
   sets: number;
   reps: number | null;
+  /** Rango de repeticiones: reps–reps_max (8–10). */
+  reps_max: number | null;
   duration_s: number | null;
   target_weight_kg: string | null;
   rest_s: number;
+  /** Misma letra en ejercicios seguidos = se alternan serie por serie. */
+  superset_group: string;
   notes: string;
 }
 export interface RoutineDay {

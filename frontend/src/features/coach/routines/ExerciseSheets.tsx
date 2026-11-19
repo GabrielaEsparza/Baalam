@@ -3,38 +3,52 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap, upload } from "@/api/client";
 import type { Exercise } from "@/api/types";
 import { ExerciseMedia } from "@/components/ExerciseMedia";
-import { Button, Field, Input, Sheet, Stepper, Tabs } from "@/components/ui";
+import { Button, Field, Input, Sheet, Stepper, Switch, Tabs } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { tr, trList } from "@/lib/exercise-i18n";
+import { fmtReps } from "@/lib/format";
 
 /** Lo que el coach configura por ejercicio. */
 export interface ItemDraft {
   exercise: Exercise;
   sets: number;
   reps: number | null;
+  reps_max: number | null;
   duration_s: number | null;
   target_weight_kg: string | null;
   rest_s: number;
+  superset_group: string;
   notes: string;
 }
+
 
 export const newDraft = (exercise: Exercise): ItemDraft => ({
   exercise,
   sets: 3,
   reps: 10,
+  reps_max: null,
   duration_s: null,
   target_weight_kg: null,
   rest_s: 90,
+  superset_group: "",
   notes: "",
 });
 
-export function itemSummary(i: { sets: number; reps: number | null; duration_s: number | null; target_weight_kg: string | null; rest_s: number }) {
-  const work = i.duration_s ? `${i.sets} × ${i.duration_s} s` : `${i.sets} × ${i.reps ?? "—"}`;
+export function itemSummary(i: {
+  sets: number;
+  reps: number | null;
+  reps_max?: number | null;
+  duration_s: number | null;
+  target_weight_kg: string | null;
+  rest_s: number;
+}) {
+  const work = i.duration_s ? `${i.sets} × ${i.duration_s} s` : `${i.sets} × ${fmtReps(i.reps, i.reps_max)}`;
   const kg = i.target_weight_kg && Number(i.target_weight_kg) > 0 ? ` · ${Number(i.target_weight_kg)} kg` : "";
   return `${work}${kg} · descanso ${i.rest_s} s`;
 }
 
-/** Configurar series, repeticiones (o tiempo), peso sugerido y descanso. Botones +/−, sin teclado. */
+/** Configurar series, repeticiones (o rango, o tiempo), peso sugerido y descanso.
+ *  Botones +/−; al tocar el número se puede escribir. */
 export function ItemSheet({
   draft,
   onClose,
@@ -73,7 +87,9 @@ export function ItemSheet({
 
         <Tabs
           value={timed ? "time" : "reps"}
-          onChange={(v) => set(v === "time" ? { duration_s: d.duration_s ?? 30, reps: null } : { duration_s: null, reps: d.reps ?? 10 })}
+          onChange={(v) =>
+            set(v === "time" ? { duration_s: d.duration_s ?? 30, reps: null, reps_max: null } : { duration_s: null, reps: d.reps ?? 10 })
+          }
           options={[
             { value: "reps", label: "Repeticiones" },
             { value: "time", label: "Tiempo" },
@@ -82,7 +98,39 @@ export function ItemSheet({
         {timed ? (
           <Stepper value={d.duration_s ?? 30} min={5} max={600} step={5} suffix="s" onChange={(v) => set({ duration_s: v })} />
         ) : (
-          <Stepper value={d.reps ?? 10} min={1} max={100} suffix="reps" onChange={(v) => set({ reps: v })} />
+          <div className="space-y-2">
+            <Switch
+              label="Rango (ej. 8–10)"
+              checked={d.reps_max != null}
+              onChange={(on) => set({ reps_max: on ? (d.reps ?? 8) + 2 : null })}
+            />
+            {d.reps_max != null ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="t-label mb-1">Desde</p>
+                  <Stepper
+                    value={d.reps ?? 8}
+                    min={1}
+                    max={99}
+                    label="Repeticiones mínimas"
+                    onChange={(v) => set({ reps: v, reps_max: Math.max(d.reps_max ?? v + 1, v + 1) })}
+                  />
+                </div>
+                <div>
+                  <p className="t-label mb-1">Hasta</p>
+                  <Stepper
+                    value={d.reps_max}
+                    min={2}
+                    max={100}
+                    label="Repeticiones máximas"
+                    onChange={(v) => set({ reps_max: v, reps: Math.min(d.reps ?? v - 1, v - 1) })}
+                  />
+                </div>
+              </div>
+            ) : (
+              <Stepper value={d.reps ?? 10} min={1} max={100} suffix="reps" onChange={(v) => set({ reps: v })} />
+            )}
+          </div>
         )}
 
         <div>
@@ -90,8 +138,9 @@ export function ItemSheet({
           <Stepper
             value={kg}
             min={0}
-            max={400}
+            max={500}
             step={2.5}
+            label="Peso sugerido en kg"
             suffix={kg ? "kg" : "sin peso"}
             onChange={(v) => set({ target_weight_kg: v ? String(v) : null })}
           />
@@ -99,7 +148,10 @@ export function ItemSheet({
 
         <div>
           <p className="t-label mb-1.5">Descanso</p>
-          <Stepper value={d.rest_s} min={0} max={600} step={15} suffix="s" onChange={(v) => set({ rest_s: v })} />
+          <Stepper value={d.rest_s} min={0} max={900} step={15} suffix="s" label="Descanso en segundos" onChange={(v) => set({ rest_s: v })} />
+          {d.superset_group && (
+            <p className="mt-1 text-sm text-ink-2">Va alternado con otro ejercicio: el descanso se toma al terminar cada ronda.</p>
+          )}
         </div>
 
         <Field label="Nota para el miembro (opcional)">

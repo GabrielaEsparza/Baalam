@@ -241,12 +241,15 @@ export function GoalSheet({ open, onClose, goal }: { open: boolean; onClose: () 
   const [pct, setPct] = useState<Record<MacroKey, string>>({ protein_g: "", carbs_g: "", fat_g: "" });
   const [grams, setGrams] = useState<Record<MacroKey, string>>({ protein_g: "", carbs_g: "", fat_g: "" });
   const [lastOpen, setLastOpen] = useState(false);
+  // Reparto de macros (en % de las kcal) que se respeta al cambiar las calorías en modo gramos.
+  const [split, setSplit] = useState<MacroPct | null>(null);
 
   function load(src: { kcal: number | null } & Partial<Record<MacroKey, number | null>>) {
     setKcal(src.kcal?.toString() ?? "");
     const g = Object.fromEntries(MACROS.map((m) => [m.key, src[m.key]?.toString() ?? ""])) as Record<MacroKey, string>;
     setGrams(g);
     const p = pctFromGrams(src);
+    setSplit(p);
     setPct(p ? toStr(roundTo100(p)) : { protein_g: "", carbs_g: "", fat_g: "" });
   }
   if (open !== lastOpen) {
@@ -294,6 +297,7 @@ export function GoalSheet({ open, onClose, goal }: { open: boolean; onClose: () 
           value={mode}
           onChange={(m) => {
             // Al cambiar de modo, llevamos los números del otro lado para no perder lo escrito.
+            if (m === "grams" && mode === "pct" && pctSum > 0) setSplit(pctN);
             if (m === "grams" && mode === "pct" && kcalN > 0)
               setGrams(Object.fromEntries(MACROS.map((x) => [x.key, String(fromPct[x.key])])) as Record<MacroKey, string>);
             if (m === "pct" && mode === "grams") {
@@ -313,7 +317,15 @@ export function GoalSheet({ open, onClose, goal }: { open: boolean; onClose: () 
           <Input
             inputMode="numeric"
             value={kcal}
-            onChange={(e) => setKcal(digits(e.target.value))}
+            onChange={(e) => {
+              const v = digits(e.target.value).slice(0, 5);
+              setKcal(v);
+              // Por gramos: al cambiar las kcal, los gramos se ajustan con el mismo reparto.
+              if (mode === "grams" && Number(v) > 0) {
+                const g = gramsFromPct(Number(v), split ?? GENERAL_IDEAL.pct);
+                setGrams(Object.fromEntries(MACROS.map((m) => [m.key, String(g[m.key])])) as Record<MacroKey, string>);
+              }
+            }}
             className="h-14 text-center text-xl font-bold tabular-nums"
             placeholder="—"
           />
@@ -343,7 +355,14 @@ export function GoalSheet({ open, onClose, goal }: { open: boolean; onClose: () 
                     onChange={(e) =>
                       mode === "pct"
                         ? setPct((s) => ({ ...s, [m.key]: digits(e.target.value).slice(0, 3) }))
-                        : setGrams((s) => ({ ...s, [m.key]: digits(e.target.value).slice(0, 4) }))
+                        : (() => {
+                            // Por gramos: las kcal son la suma de los macros.
+                            const next = { ...grams, [m.key]: digits(e.target.value).slice(0, 4) };
+                            setGrams(next);
+                            setSplit(pctFromGrams(Object.fromEntries(MACROS.map((x) => [x.key, Number(next[x.key]) || 0]))));
+                            const total = MACROS.reduce((a, x) => a + (Number(next[x.key]) || 0) * x.kcalPerG, 0);
+                            setKcal(total > 0 ? String(Math.round(total)) : "");
+                          })()
                     }
                     className="h-12 pr-8 text-center text-lg font-bold tabular-nums"
                     placeholder="—"
@@ -362,8 +381,7 @@ export function GoalSheet({ open, onClose, goal }: { open: boolean; onClose: () 
         ) : (
           kcalFromGrams > 0 && (
             <p className="text-sm tabular-nums text-ink-2">
-              Tus macros suman {fmtN(kcalFromGrams, 0)} kcal
-              {kcalN > 0 && Math.abs(kcalFromGrams - kcalN) > kcalN * 0.1 && " · no coincide con las calorías que escribiste"}
+              Proteína y carbohidratos aportan 4 kcal por gramo; la grasa, 9. Si cambias las calorías, los gramos se ajustan solos.
             </p>
           )
         )}

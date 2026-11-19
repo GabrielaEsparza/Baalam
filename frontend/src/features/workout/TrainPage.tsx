@@ -1,18 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get as idbGet, set as idbSet } from "idb-keyval";
-import { ArrowLeftRight, Check, ChevronDown, CloudOff, Dumbbell, Flag, RotateCcw, Timer, Trophy, X } from "lucide-react";
+import { ArrowLeftRight, Check, ChevronDown, CloudOff, Dumbbell, Flag, Repeat, RotateCcw, Timer, Trophy, X } from "lucide-react";
+import type { ReactNode } from "react";
 import { api, unwrap, ApiError } from "@/api/client";
 import type { FinishResult, SwapOption, TodayItem, TodayWorkoutFull } from "@/api/types";
 import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { Button, Card, EmptyState, ErrorBox, PageTitle, Sheet, Spinner, cx } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { trList } from "@/lib/exercise-i18n";
-import { WD_SHORT } from "@/lib/format";
+import { WD_SHORT, fmtReps } from "@/lib/format";
 
 const KEY = ["workout-today"];
 const QUEUE = "baalam-set-queue";
 type SetBody = { item_id: number; set_number: number; weight_kg: string | null; reps: number | null; done: boolean };
+
+/** Agrupa ejercicios seguidos con la misma superserie (se alternan serie por serie). */
+function toBlocks(items: TodayItem[]): TodayItem[][] {
+  const out: TodayItem[][] = [];
+  for (const it of items) {
+    const last = out.at(-1);
+    if (last && it.superset_group && last[0].superset_group === it.superset_group) last.push(it);
+    else out.push([it]);
+  }
+  return out;
+}
+const doneSets = (it: TodayItem) => it.logged.filter((l) => l.done).length;
+const workLabel = (it: TodayItem) => (it.duration_s ? `${it.duration_s} s` : `${fmtReps(it.reps, it.reps_max)} reps`);
 
 /* ---------- Cola sin conexión: las series se guardan local y se reenvían con señal ---------- */
 async function enqueue(b: SetBody) {
@@ -159,12 +173,20 @@ export default function TrainPage() {
     onError: (e) => toast((e as Error).message, "error"),
   });
 
+  const blocks = toBlocks(data?.day?.items ?? []);
   const onSetDone = useCallback(
     (item: TodayItem, b: SetBody) => {
       logSet.mutate(b);
-      if (b.done && item.rest_s > 0) setRest({ total: item.rest_s, until: Date.now() + item.rest_s * 1000 });
+      if (!b.done) return;
+      // En ejercicios alternados, sin descanso hasta terminar la ronda: pasa directo al siguiente.
+      const block = blocks.find((bl) => bl.some((x) => x.id === item.id)) ?? [item];
+      const pendingInRound = block.some(
+        (x) => x.id !== item.id && x.sets >= b.set_number && !x.logged.some((l) => l.set_number === b.set_number && l.done),
+      );
+      if (pendingInRound) return;
+      if (item.rest_s > 0) setRest({ total: item.rest_s, until: Date.now() + item.rest_s * 1000 });
     },
-    [logSet],
+    [logSet, blocks],
   );
 
   if (isLoading) return <Spinner />;
@@ -173,7 +195,7 @@ export default function TrainPage() {
   const items = data.day?.items ?? [];
   const planned = items.reduce((a, i) => a + i.sets, 0);
   const done = items.reduce((a, i) => a + i.logged.filter((l) => l.done).length, 0);
-  const firstOpen = items.findIndex((i) => i.logged.filter((l) => l.done).length < i.sets);
+  const firstOpen = blocks.findIndex((bl) => bl.some((i) => doneSets(i) < i.sets));
   const openIdx = open ?? (firstOpen === -1 ? null : firstOpen);
 
   return (
@@ -252,16 +274,22 @@ export default function TrainPage() {
           </header>
 
           <div className="space-y-3">
-            {items.map((it, idx) => (
-              <ExerciseCard
-                key={it.id}
-                item={it}
-                index={idx}
-                expanded={openIdx === idx}
-                onToggle={() => setOpen(openIdx === idx ? -1 : idx)}
-                onSet={(b) => onSetDone(it, b)}
-              />
-            ))}
+            {blocks.map((bl, idx) => {
+              const number = blocks.slice(0, idx).reduce((a, x) => a + x.length, 0) + 1;
+              const toggle = () => setOpen(openIdx === idx ? -1 : idx);
+              return bl.length > 1 ? (
+                <SupersetCard key={bl[0].id} items={bl} number={number} expanded={openIdx === idx} onToggle={toggle} onSet={onSetDone} />
+              ) : (
+                <ExerciseCard
+                  key={bl[0].id}
+                  item={bl[0]}
+                  index={number - 1}
+                  expanded={openIdx === idx}
+                  onToggle={toggle}
+                  onSet={(b) => onSetDone(bl[0], b)}
+                />
+              );
+            })}
           </div>
 
           <Button full className="mt-6" icon={Flag} loading={finish.isPending} disabled={done === 0} onClick={() => finish.mutate()}>
@@ -416,7 +444,7 @@ function ExerciseCard({
   const complete = doneCount >= item.sets;
   const ex = item.exercise;
   const suggested = item.logged.at(-1)?.weight_kg ?? item.last_weight_kg ?? item.target_weight_kg;
-  const work = item.duration_s ? `${item.duration_s} s` : `${item.reps ?? "—"} reps`;
+  const work = workLabel(item);
 
   function completeAll() {
     for (let n = 1; n <= item.sets; n++) {
@@ -504,10 +532,172 @@ function ExerciseCard({
   );
 }
 
-function SetRow({ n, item, suggested, onSet }: { n: number; item: TodayItem; suggested: string | null; onSet: (b: SetBody) => void }) {
+/** Ejercicios alternados: se hacen por rondas (A, B, A, B…) hasta completar las series de cada uno. */
+function SupersetCard({
+  items,
+  number,
+  expanded,
+  onToggle,
+  onSet,
+}: {
+  items: TodayItem[];
+  number: number;
+  expanded: boolean;
+  onToggle: () => void;
+  onSet: (item: TodayItem, b: SetBody) => void;
+}) {
+  const [view, setView] = useState<TodayItem | null>(null);
+  const letters = items.map((_, k) => String.fromCharCode(65 + k));
+  const total = items.reduce((a, i) => a + i.sets, 0);
+  const done = items.reduce((a, i) => a + Math.min(doneSets(i), i.sets), 0);
+  const complete = done >= total;
+  const rounds = Math.max(...items.map((i) => i.sets));
+  const suggestedOf = (it: TodayItem) => it.logged.at(-1)?.weight_kg ?? it.last_weight_kg ?? it.target_weight_kg;
+  const restAfter = items.at(-1)?.rest_s ?? 0;
+
+  function completeAll() {
+    for (let n = 1; n <= rounds; n++)
+      for (const it of items) {
+        if (n > it.sets) continue;
+        const l = it.logged.find((x) => x.set_number === n);
+        if (l?.done) continue;
+        onSet(it, { item_id: it.id, set_number: n, weight_kg: l?.weight_kg ?? suggestedOf(it) ?? null, reps: l?.reps ?? it.reps, done: true });
+      }
+  }
+
+  return (
+    <Card className={cx("border-l-4 border-l-orchid p-0", complete && "border-success/50")}>
+      <button onClick={onToggle} className="flex w-full items-center gap-3 p-3 text-left" aria-expanded={expanded}>
+        <div className="relative w-16 shrink-0">
+          <ExerciseMedia ex={items[0].exercise} className="!rounded-[10px]" />
+          <span className="absolute -bottom-1 -right-1 grid size-6 place-items-center rounded-full bg-orchid text-white">
+            <Repeat className="size-3.5" />
+          </span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-bold uppercase tracking-wide text-orchid">Alternados · {rounds} rondas</p>
+          {items.map((it, k) => (
+            <p key={it.id} className="truncate font-semibold first-letter:uppercase leading-snug">
+              <span className="mr-1 text-ink-2">
+                {number + k}.
+              </span>
+              {it.exercise.name}
+            </p>
+          ))}
+        </div>
+        {complete ? (
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-success text-white">
+            <Check className="size-5" />
+          </span>
+        ) : (
+          <span className="shrink-0 text-sm font-bold tabular-nums text-ink-2">
+            {done}/{total}
+          </span>
+        )}
+        <ChevronDown className={cx("size-5 shrink-0 text-ink-2 transition", expanded && "rotate-180")} />
+      </button>
+
+      {expanded && (
+        <div className="space-y-4 border-t border-line p-3">
+          <p className="text-[15px] text-ink-2">
+            Haz una serie de cada uno, en orden, sin descansar entre ellos. Al terminar la ronda descansa
+            {restAfter > 0 ? ` ${restAfter} s` : ""} y repite.
+          </p>
+          <ul className="space-y-2">
+            {items.map((it, k) => {
+              const sug = suggestedOf(it);
+              return (
+                <li key={it.id}>
+                  <button onClick={() => setView(it)} className="flex w-full items-center gap-3 rounded-input bg-surface-2 p-2 text-left">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-full bg-orchid font-bold text-white">{letters[k]}</span>
+                    <div className="w-12 shrink-0">
+                      <ExerciseMedia ex={it.exercise} className="!rounded-[8px]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold first-letter:uppercase">{it.exercise.name}</p>
+                      <p className="text-sm text-ink-2">
+                        {it.sets} × {workLabel(it)}
+                        {sug && Number(sug) > 0 ? ` · ${Number(sug)} kg` : ""}
+                      </p>
+                      {it.notes && <p className="truncate text-xs text-ink-2">“{it.notes}”</p>}
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          {Array.from({ length: rounds }, (_, r) => r + 1).map((n) => {
+            const inRound = items.filter((it) => it.sets >= n);
+            const roundDone = inRound.every((it) => it.logged.some((l) => l.set_number === n && l.done));
+            return (
+              <div key={n} className="space-y-2">
+                <p className={cx("t-label flex items-center gap-1.5", roundDone && "text-success")}>
+                  Ronda {n} {roundDone && <Check className="size-4" />}
+                </p>
+                <div className="grid grid-cols-[48px_1fr_1fr_56px] gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-2">
+                  <span />
+                  <span className="text-center">Kg</span>
+                  <span className="text-center">Reps / seg</span>
+                  <span />
+                </div>
+                {inRound.map((it) => (
+                  <SetRow
+                    key={it.id}
+                    n={n}
+                    item={it}
+                    suggested={suggestedOf(it)}
+                    onSet={(b) => onSet(it, b)}
+                    tag={<span className="text-orchid">{letters[items.indexOf(it)]}</span>}
+                  />
+                ))}
+              </div>
+            );
+          })}
+
+          {!complete && (
+            <Button variant="secondary" full size="sm" icon={Check} onClick={completeAll}>
+              Marcar todo completo
+            </Button>
+          )}
+        </div>
+      )}
+
+      <Sheet open={!!view} onClose={() => setView(null)} title={view?.exercise.name ?? ""}>
+        {view && (
+          <div className="space-y-3">
+            <ExerciseMedia ex={view.exercise} preferVideo className="mx-auto max-w-md" />
+            {(view.notes || view.exercise.instructions_es) && (
+              <div className="rounded-input bg-surface-2 p-3 text-[15px]">
+                {view.notes && <p className="font-semibold">{view.notes}</p>}
+                {view.exercise.instructions_es && <p className="whitespace-pre-line text-ink-2">{view.exercise.instructions_es}</p>}
+              </div>
+            )}
+          </div>
+        )}
+      </Sheet>
+    </Card>
+  );
+}
+
+function SetRow({
+  n,
+  item,
+  suggested,
+  onSet,
+  tag,
+}: {
+  n: number;
+  item: TodayItem;
+  suggested: string | null;
+  onSet: (b: SetBody) => void;
+  tag?: ReactNode;
+}) {
   const logged = item.logged.find((l) => l.set_number === n);
   const [kg, setKg] = useState(logged?.weight_kg != null ? String(Number(logged.weight_kg)) : suggested ? String(Number(suggested)) : "");
-  const [reps, setReps] = useState(String(logged?.reps ?? item.reps ?? item.duration_s ?? ""));
+  // Con rango (8–10) no se pre-llena: cada quien escribe cuántas hizo.
+  const ranged = !item.duration_s && item.reps_max != null;
+  const [reps, setReps] = useState(String(logged?.reps ?? (ranged ? "" : (item.reps ?? item.duration_s ?? ""))));
   const done = !!logged?.done;
   // Si la serie anterior cambió de peso, las siguientes sin registrar lo heredan.
   const prev = useRef(suggested);
@@ -534,11 +724,11 @@ function SetRow({ n, item, suggested, onSet }: { n: number; item: TodayItem; sug
   return (
     <div className="grid grid-cols-[48px_1fr_1fr_56px] items-center gap-2">
       <span className="text-center text-lg font-extrabold tabular-nums text-ink-2">
-        {n}
+        {tag ?? n}
         {logged?.is_pr && <span className="ml-0.5 text-xs text-gold">PR</span>}
       </span>
       <input aria-label={`Peso serie ${n}`} inputMode="decimal" value={kg} onChange={(e) => setKg(e.target.value)} className={inputCls} placeholder="—" />
-      <input aria-label={`Repeticiones serie ${n}`} inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value.replace(/\D/g, ""))} className={inputCls} placeholder="—" />
+      <input aria-label={`Repeticiones serie ${n}`} inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value.replace(/\D/g, ""))} className={inputCls} placeholder={ranged ? fmtReps(item.reps, item.reps_max) : "—"} />
       <button
         onClick={toggle}
         aria-label={done ? `Desmarcar serie ${n}` : `Marcar serie ${n}`}

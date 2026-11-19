@@ -176,6 +176,7 @@ export function Field({
 }
 
 /** Stepper +/- (el coach ajusta sin teclado). */
+/** Botones +/− y, al tocar el número, se puede escribir con el teclado. */
 export function Stepper({
   value,
   onChange,
@@ -183,6 +184,7 @@ export function Stepper({
   max = 999,
   step = 1,
   suffix,
+  label,
 }: {
   value: number;
   onChange: (v: number) => void;
@@ -190,26 +192,50 @@ export function Stepper({
   max?: number;
   step?: number;
   suffix?: string;
+  label?: string;
 }) {
+  const [text, setText] = useState<string | null>(null); // null = no se está escribiendo
+  const decimals = !Number.isInteger(step);
+  const clamp = (v: number) => Math.min(max, Math.max(min, v));
+  const round = (v: number) => Math.round(v * 100) / 100; // evita 2.4999999 al sumar 2.5
+  function commit() {
+    if (text === null) return;
+    const n = Number(text.replace(",", "."));
+    if (text.trim() !== "" && Number.isFinite(n)) onChange(clamp(decimals ? round(n) : Math.round(n)));
+    setText(null);
+  }
   return (
-    <div className="flex h-14 items-center rounded-input border border-line bg-surface-2">
+    <div className="flex h-14 items-center rounded-input border border-line bg-surface-2 focus-within:border-orchid">
       <button
         type="button"
         aria-label="Menos"
-        className="grid h-full w-14 place-items-center text-ink"
-        onClick={() => onChange(Math.max(min, value - step))}
+        className="grid h-full w-14 shrink-0 place-items-center text-ink"
+        onClick={() => onChange(clamp(round(value - step)))}
       >
         <Minus className="size-5" />
       </button>
-      <span className="flex-1 text-center text-xl font-bold tabular-nums">
-        {value}
+      <label className="flex min-w-0 flex-1 items-baseline justify-center">
+        <input
+          aria-label={label ?? suffix ?? "Valor"}
+          inputMode={decimals ? "decimal" : "numeric"}
+          value={text ?? String(value)}
+          onFocus={(e) => {
+            setText(String(value));
+            requestAnimationFrame(() => e.target.select());
+          }}
+          onChange={(e) => setText(e.target.value.replace(decimals ? /[^\d.,]/g : /\D/g, "").slice(0, 6))}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
+          style={{ width: `${Math.max(2, (text ?? String(value)).length) + 0.5}ch` }}
+          className="min-w-0 bg-transparent text-center text-xl font-bold tabular-nums text-ink focus:outline-none"
+        />
         {suffix && <span className="ml-1 text-sm font-medium text-ink-2">{suffix}</span>}
-      </span>
+      </label>
       <button
         type="button"
         aria-label="Más"
-        className="grid h-full w-14 place-items-center text-ink"
-        onClick={() => onChange(Math.min(max, value + step))}
+        className="grid h-full w-14 shrink-0 place-items-center text-ink"
+        onClick={() => onChange(clamp(round(value + step)))}
       >
         <Plus className="size-5" />
       </button>

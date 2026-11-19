@@ -33,3 +33,7 @@ export function waLink(phone: string, text: string) {
 }
 
 export const methodLabel: Record<string, string> = { cash: "Efectivo", transfer: "Transferencia", other: "Otro" };
+
+/** Repeticiones: "8–10" si hay rango; si no, el número. */
+export const fmtReps = (reps: number | null | undefined, max?: number | null) =>
+  reps == null ? "—" : max && max > reps ? `${reps}–${max}` : String(reps);

@@ -20,7 +20,8 @@ export function useMemberRoutine(memberId: number) {
   });
 }
 
-type ItemLike = Pick<RoutineItem, "sets" | "reps" | "duration_s" | "target_weight_kg" | "rest_s" | "notes"> & {
+type ItemLike = Pick<RoutineItem, "sets" | "reps" | "duration_s" | "target_weight_kg" | "rest_s" | "notes"> &
+  Partial<Pick<RoutineItem, "reps_max" | "superset_group">> & {
   exercise: { id: number };
 };
 
@@ -28,9 +29,11 @@ const toIn = (i: ItemLike) => ({
   exercise_id: i.exercise.id,
   sets: i.sets,
   reps: i.reps,
+  reps_max: i.reps_max ?? null,
   duration_s: i.duration_s,
   target_weight_kg: i.target_weight_kg,
   rest_s: i.rest_s,
+  superset_group: i.superset_group ?? "",
   notes: i.notes ?? "",
 });
 
