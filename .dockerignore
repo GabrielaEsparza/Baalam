@@ -1,0 +1,11 @@
+**/node_modules
+**/.venv
+**/__pycache__
+frontend/dist
+frontend/dev-dist
+backend/db.sqlite3
+backend/media
+backend/staticfiles
+backend/.env
+logo-original.png
+*.log

@@ -1,0 +1,6532 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "BÁALAM GYM API",
+    "version": "1.0.0",
+    "description": ""
+  },
+  "paths": {
+    "/api/auth/csrf": {
+      "get": {
+        "operationId": "apps_accounts_api_csrf",
+        "summary": "Csrf",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Pone la cookie CSRF.",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "operationId": "apps_accounts_api_register",
+        "summary": "Register",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterIn"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "apps_accounts_api_do_login",
+        "summary": "Do Login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginIn"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "apps_accounts_api_do_logout",
+        "summary": "Do Logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/password-reset": {
+      "post": {
+        "operationId": "apps_accounts_api_password_reset",
+        "summary": "Password Reset",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Siempre responde ok (no revela si el correo existe).",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetIn"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/auth/password-reset/confirm": {
+      "post": {
+        "operationId": "apps_accounts_api_password_reset_confirm",
+        "summary": "Password Reset Confirm",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetConfirmIn"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "operationId": "apps_accounts_api_me",
+        "summary": "Me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "miembro"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "apps_accounts_api_patch_me",
+        "summary": "Patch Me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "miembro"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/me/avatar": {
+      "post": {
+        "operationId": "apps_accounts_api_upload_avatar",
+        "summary": "Upload Avatar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "miembro"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "title": "FileParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "apps_accounts_api_delete_avatar",
+        "summary": "Delete Avatar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "miembro"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/home": {
+      "get": {
+        "operationId": "apps_accounts_api_home",
+        "summary": "Home",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "miembro"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/gym": {
+      "get": {
+        "operationId": "apps_memberships_api_gym_info",
+        "summary": "Gym Info",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicGymOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Para la landing: datos del gym y planes (informativo).",
+        "tags": [
+          "membresía"
+        ]
+      }
+    },
+    "/api/membership": {
+      "get": {
+        "operationId": "apps_memberships_api_my_membership",
+        "summary": "My Membership",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembershipOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "membresía"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/membership/requests": {
+      "post": {
+        "operationId": "apps_memberships_api_make_request",
+        "summary": "Make Request",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "membresía"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/schedule/sessions": {
+      "get": {
+        "operationId": "apps_schedule_api_list_sessions",
+        "summary": "List Sessions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start",
+            "schema": {
+              "format": "date",
+              "title": "Start",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "schema": {
+              "format": "date",
+              "title": "End",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SessionOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "horarios"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/schedule/schedules": {
+      "get": {
+        "operationId": "apps_schedule_api_my_schedules",
+        "summary": "My Schedules",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScheduleIO"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "Horarios recurrentes de su plan, para armar el patrón semanal.",
+        "tags": [
+          "horarios"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/bookings": {
+      "get": {
+        "operationId": "apps_schedule_api_my_bookings",
+        "summary": "My Bookings",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "month",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "horarios"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/bookings/month": {
+      "post": {
+        "operationId": "apps_schedule_api_book_month",
+        "summary": "Book Month",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "horarios"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookMonthIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/bookings/single": {
+      "post": {
+        "operationId": "apps_schedule_api_book_single",
+        "summary": "Book Single",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "horarios"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/bookings/{booking_id}/change": {
+      "post": {
+        "operationId": "apps_schedule_api_change",
+        "summary": "Change",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "schema": {
+              "title": "Booking Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "horarios"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/waitlist/{entry_id}": {
+      "delete": {
+        "operationId": "apps_schedule_api_leave_waitlist",
+        "summary": "Leave Waitlist",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "schema": {
+              "title": "Entry Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "horarios"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/checkin": {
+      "post": {
+        "operationId": "apps_checkin_api_do_checkin",
+        "summary": "Do Checkin",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "check-in"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckinIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/progress/body": {
+      "get": {
+        "operationId": "apps_progress_api_body",
+        "summary": "Body",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "progreso"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "apps_progress_api_log_body",
+        "summary": "Log Body",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "progreso"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/podium": {
+      "get": {
+        "operationId": "apps_podium_api_podium",
+        "summary": "Podium",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "month",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "podio"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/announcements": {
+      "get": {
+        "operationId": "apps_community_api_feed",
+        "summary": "Feed",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AnnouncementIO"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "comunidad"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/workouts/today": {
+      "get": {
+        "operationId": "apps_training_api_workout_today",
+        "summary": "Workout Today",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "entrenar"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/workouts/today/sets": {
+      "post": {
+        "operationId": "apps_training_api_log_set",
+        "summary": "Log Set",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "entrenar"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/workouts/today/swap": {
+      "post": {
+        "operationId": "apps_training_api_swap_day",
+        "summary": "Swap Day",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "description": "Hoy hace la rutina de otro día de su semana.",
+        "tags": [
+          "entrenar"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwapIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "apps_training_api_clear_swap",
+        "summary": "Clear Swap",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "entrenar"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/workouts/today/finish": {
+      "post": {
+        "operationId": "apps_training_api_finish",
+        "summary": "Finish",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "entrenar"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/search": {
+      "get": {
+        "operationId": "apps_nutrition_api_search",
+        "summary": "Search",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "title": "Q",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "source",
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "usda",
+                "off"
+              ],
+              "title": "Source",
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/foods/resolve": {
+      "post": {
+        "operationId": "apps_nutrition_api_resolve",
+        "summary": "Resolve",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/barcode/{code}": {
+      "get": {
+        "operationId": "apps_nutrition_api_barcode",
+        "summary": "Barcode",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "schema": {
+              "title": "Code",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/foods/{food_id}": {
+      "get": {
+        "operationId": "apps_nutrition_api_food",
+        "summary": "Food",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "food_id",
+            "schema": {
+              "title": "Food Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/foods/{food_id}/calc": {
+      "post": {
+        "operationId": "apps_nutrition_api_calc",
+        "summary": "Calc",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "food_id",
+            "schema": {
+              "title": "Food Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "description": "Calculadora (el frontend calcula al instante; esto es la fuente de verdad).",
+        "tags": [
+          "nutrición"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalcIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/day": {
+      "get": {
+        "operationId": "apps_nutrition_api_day",
+        "summary": "Day",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/logs": {
+      "post": {
+        "operationId": "apps_nutrition_api_add",
+        "summary": "Add",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/logs/manual": {
+      "post": {
+        "operationId": "apps_nutrition_api_add_manual",
+        "summary": "Add Manual",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/logs/{log_id}/manual": {
+      "patch": {
+        "operationId": "apps_nutrition_api_edit_manual",
+        "summary": "Edit Manual",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "log_id",
+            "schema": {
+              "title": "Log Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/logs/{log_id}": {
+      "patch": {
+        "operationId": "apps_nutrition_api_edit",
+        "summary": "Edit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "log_id",
+            "schema": {
+              "title": "Log Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "apps_nutrition_api_remove",
+        "summary": "Remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "log_id",
+            "schema": {
+              "title": "Log Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/quick": {
+      "get": {
+        "operationId": "apps_nutrition_api_quick",
+        "summary": "Quick",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/quick/{food_id}": {
+      "delete": {
+        "operationId": "apps_nutrition_api_hide_quick",
+        "summary": "Hide Quick",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "food_id",
+            "schema": {
+              "title": "Food Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Quitar de Recientes/Frecuentes.",
+        "tags": [
+          "nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "apps_nutrition_api_unhide_quick",
+        "summary": "Unhide Quick",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "food_id",
+            "schema": {
+              "title": "Food Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Deshacer \"quitar\".",
+        "tags": [
+          "nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/favorites/{food_id}": {
+      "put": {
+        "operationId": "apps_nutrition_api_fav_on",
+        "summary": "Fav On",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "food_id",
+            "schema": {
+              "title": "Food Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "apps_nutrition_api_fav_off",
+        "summary": "Fav Off",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "food_id",
+            "schema": {
+              "title": "Food Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/nutrition/goals": {
+      "get": {
+        "operationId": "apps_nutrition_api_goals",
+        "summary": "Goals",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "apps_nutrition_api_set_goals",
+        "summary": "Set Goals",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "nutrición"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/members": {
+      "get": {
+        "operationId": "apps_accounts_api_members",
+        "summary": "Members",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "default": "",
+              "title": "Q",
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "default": "",
+              "title": "Status",
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MemberRow"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/members/{member_id}": {
+      "get": {
+        "operationId": "apps_accounts_api_member_detail",
+        "summary": "Member Detail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "schema": {
+              "title": "Member Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberDetail"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "apps_accounts_api_member_patch",
+        "summary": "Member Patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "schema": {
+              "title": "Member Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberDetail"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/members/{member_id}/approve": {
+      "post": {
+        "operationId": "apps_accounts_api_approve",
+        "summary": "Approve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "schema": {
+              "title": "Member Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/members/{member_id}/checkin": {
+      "post": {
+        "operationId": "apps_accounts_api_manual_checkin",
+        "summary": "Manual Checkin",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "schema": {
+              "title": "Member Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/stats": {
+      "get": {
+        "operationId": "apps_accounts_api_stats",
+        "summary": "Stats",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "months",
+            "schema": {
+              "default": 6,
+              "title": "Months",
+              "type": "integer"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "description": "Gráficas del panel: asistencias y pagos por mes.",
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/dashboard": {
+      "get": {
+        "operationId": "apps_accounts_api_dashboard",
+        "summary": "Dashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/payments": {
+      "post": {
+        "operationId": "apps_memberships_api_register_payment",
+        "summary": "Register Payment",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/plans": {
+      "get": {
+        "operationId": "apps_memberships_api_plans",
+        "summary": "Plans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlanOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "apps_memberships_api_create_plan",
+        "summary": "Create Plan",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/plans/{plan_id}": {
+      "put": {
+        "operationId": "apps_memberships_api_update_plan",
+        "summary": "Update Plan",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "schema": {
+              "title": "Plan Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/memberships/{membership_id}/pause": {
+      "post": {
+        "operationId": "apps_memberships_api_pause",
+        "summary": "Pause",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "membership_id",
+            "schema": {
+              "title": "Membership Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/memberships/{membership_id}/resume": {
+      "post": {
+        "operationId": "apps_memberships_api_resume",
+        "summary": "Resume",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "membership_id",
+            "schema": {
+              "title": "Membership Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/requests/{request_id}/reject": {
+      "post": {
+        "operationId": "apps_memberships_api_reject_request",
+        "summary": "Reject Request",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "schema": {
+              "title": "Request Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/settings": {
+      "get": {
+        "operationId": "apps_memberships_api_get_settings",
+        "summary": "Get Settings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsIO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "apps_memberships_api_put_settings",
+        "summary": "Put Settings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsIO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsIO"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/schedules": {
+      "get": {
+        "operationId": "apps_schedule_api_schedules",
+        "summary": "Schedules",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScheduleIO"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "apps_schedule_api_create_schedule",
+        "summary": "Create Schedule",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleIO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleIO"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/schedules/{schedule_id}": {
+      "put": {
+        "operationId": "apps_schedule_api_update_schedule",
+        "summary": "Update Schedule",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "schedule_id",
+            "schema": {
+              "title": "Schedule Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleIO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleIO"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/sessions/{session_id}/cancel": {
+      "post": {
+        "operationId": "apps_schedule_api_cancel_session",
+        "summary": "Cancel Session",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "schema": {
+              "title": "Session Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/sessions/{session_id}/reopen": {
+      "post": {
+        "operationId": "apps_schedule_api_reopen_session",
+        "summary": "Reopen Session",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "schema": {
+              "title": "Session Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/sessions/extra": {
+      "post": {
+        "operationId": "apps_schedule_api_extra_session",
+        "summary": "Extra Session",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtraSessionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/sessions/{session_id}": {
+      "patch": {
+        "operationId": "apps_schedule_api_edit_session",
+        "summary": "Edit Session",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "schema": {
+              "title": "Session Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionEditIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/occupancy": {
+      "get": {
+        "operationId": "apps_schedule_api_occupancy",
+        "summary": "Occupancy",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "week",
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Week"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/sessions/{session_id}/bookings": {
+      "get": {
+        "operationId": "apps_schedule_api_session_bookings",
+        "summary": "Session Bookings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "schema": {
+              "title": "Session Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/bookings": {
+      "post": {
+        "operationId": "apps_schedule_api_coach_add",
+        "summary": "Coach Add",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoachBookingIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/bookings/{booking_id}": {
+      "delete": {
+        "operationId": "apps_schedule_api_coach_remove",
+        "summary": "Coach Remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "schema": {
+              "title": "Booking Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/qr": {
+      "get": {
+        "operationId": "apps_checkin_api_qr",
+        "summary": "Qr",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "description": "Pantalla de recepción: token actual, código de 6 dígitos, segundos para expirar,\nhorarios abiertos ahora para check-in y últimas llegadas.",
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/announcements": {
+      "get": {
+        "operationId": "apps_community_api_all_announcements",
+        "summary": "All Announcements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AnnouncementIO"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "apps_community_api_create",
+        "summary": "Create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementIO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementIO"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/announcements/{ann_id}": {
+      "put": {
+        "operationId": "apps_community_api_update",
+        "summary": "Update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ann_id",
+            "schema": {
+              "title": "Ann Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementIO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementIO"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "apps_community_api_delete",
+        "summary": "Delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ann_id",
+            "schema": {
+              "title": "Ann Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/exercises/catalog": {
+      "get": {
+        "operationId": "apps_training_api_catalog",
+        "summary": "Catalog",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "default": "",
+              "title": "Q",
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "body_part",
+            "schema": {
+              "default": "",
+              "title": "Body Part",
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "equipment",
+            "schema": {
+              "default": "",
+              "title": "Equipment",
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "default": "",
+              "title": "Cursor",
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · rutinas"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/exercises/filters": {
+      "get": {
+        "operationId": "apps_training_api_catalog_filters",
+        "summary": "Catalog Filters",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · rutinas"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/exercises": {
+      "get": {
+        "operationId": "apps_training_api_library",
+        "summary": "Library",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "default": "",
+              "title": "Q",
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "muscle",
+            "schema": {
+              "default": "",
+              "title": "Muscle",
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · rutinas"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "apps_training_api_create_custom",
+        "summary": "Create Custom",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "description": "Ejercicio propio, para lo que no esté en el catálogo.",
+        "tags": [
+          "coach · rutinas"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/exercises/{exercise_id}/media": {
+      "post": {
+        "operationId": "apps_training_api_upload_media",
+        "summary": "Upload Media",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "exercise_id",
+            "schema": {
+              "title": "Exercise Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · rutinas"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "title": "FileParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "apps_training_api_delete_media",
+        "summary": "Delete Media",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "exercise_id",
+            "schema": {
+              "title": "Exercise Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · rutinas"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/exercises/import": {
+      "post": {
+        "operationId": "apps_training_api_import_exercise",
+        "summary": "Import Exercise",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · rutinas"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/exercises/{exercise_id}": {
+      "patch": {
+        "operationId": "apps_training_api_patch_exercise",
+        "summary": "Patch Exercise",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "exercise_id",
+            "schema": {
+              "title": "Exercise Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · rutinas"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExercisePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/routines": {
+      "get": {
+        "operationId": "apps_training_api_routine_members",
+        "summary": "Routine Members",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "Inscritos en rutina personalizada, con los días que reservaron.",
+        "tags": [
+          "coach · rutinas"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/routines/{member_id}": {
+      "get": {
+        "operationId": "apps_training_api_routine",
+        "summary": "Routine",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "schema": {
+              "title": "Member Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · rutinas"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/routines/{member_id}/days/{weekday}": {
+      "put": {
+        "operationId": "apps_training_api_save_day",
+        "summary": "Save Day",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "schema": {
+              "title": "Member Id",
+              "type": "integer"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "weekday",
+            "schema": {
+              "title": "Weekday",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · rutinas"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/routines/{member_id}/copy": {
+      "post": {
+        "operationId": "apps_training_api_copy_day",
+        "summary": "Copy Day",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "schema": {
+              "title": "Member Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · rutinas"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/members/{member_id}/nutrition": {
+      "get": {
+        "operationId": "apps_nutrition_api_coach_member_nutrition",
+        "summary": "Coach Member Nutrition",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "schema": {
+              "title": "Member Id",
+              "type": "integer"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "date",
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · nutrición"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/members/{member_id}/nutrition-goals": {
+      "put": {
+        "operationId": "apps_nutrition_api_coach_set_goals",
+        "summary": "Coach Set Goals",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "schema": {
+              "title": "Member Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach · nutrición"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Features": {
+        "properties": {
+          "routine": {
+            "title": "Routine",
+            "type": "boolean"
+          },
+          "open_gym": {
+            "title": "Open Gym",
+            "type": "boolean"
+          },
+          "classes": {
+            "title": "Classes",
+            "type": "boolean"
+          },
+          "access": {
+            "title": "Access",
+            "type": "boolean"
+          },
+          "coach": {
+            "title": "Coach",
+            "type": "boolean"
+          },
+          "admin": {
+            "title": "Admin",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "routine",
+          "open_gym",
+          "classes",
+          "access",
+          "coach",
+          "admin"
+        ],
+        "title": "Features",
+        "type": "object"
+      },
+      "MeOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "goal": {
+            "title": "Goal",
+            "type": "string"
+          },
+          "birth_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birth Date"
+          },
+          "sex": {
+            "default": "",
+            "enum": [
+              "f",
+              "m",
+              ""
+            ],
+            "title": "Sex",
+            "type": "string"
+          },
+          "height_cm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height Cm"
+          },
+          "target_weight_kg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Weight Kg"
+          },
+          "greeting": {
+            "enum": [
+              "a",
+              "o",
+              "x"
+            ],
+            "title": "Greeting",
+            "type": "string"
+          },
+          "theme": {
+            "enum": [
+              "light",
+              "dark"
+            ],
+            "title": "Theme",
+            "type": "string"
+          },
+          "show_in_podium": {
+            "title": "Show In Podium",
+            "type": "boolean"
+          },
+          "share_achievements": {
+            "title": "Share Achievements",
+            "type": "boolean"
+          },
+          "features": {
+            "$ref": "#/components/schemas/Features"
+          },
+          "membership": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MembershipBrief"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "full_name",
+          "phone",
+          "avatar_url",
+          "role",
+          "status",
+          "goal",
+          "height_cm",
+          "target_weight_kg",
+          "greeting",
+          "theme",
+          "show_in_podium",
+          "share_achievements",
+          "features",
+          "membership"
+        ],
+        "title": "MeOut",
+        "type": "object"
+      },
+      "MembershipBrief": {
+        "properties": {
+          "plan_name": {
+            "title": "Plan Name",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "days_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Left"
+          },
+          "blocked_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked On"
+          },
+          "sessions_per_week": {
+            "title": "Sessions Per Week",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "plan_name",
+          "status",
+          "start_date",
+          "end_date",
+          "days_left",
+          "sessions_per_week"
+        ],
+        "title": "MembershipBrief",
+        "type": "object"
+      },
+      "RegisterIn": {
+        "properties": {
+          "full_name": {
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Full Name",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "phone": {
+            "maxLength": 20,
+            "minLength": 10,
+            "title": "Phone",
+            "type": "string"
+          },
+          "password": {
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "full_name",
+          "email",
+          "phone",
+          "password"
+        ],
+        "title": "RegisterIn",
+        "type": "object"
+      },
+      "LoginIn": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginIn",
+        "type": "object"
+      },
+      "ResetIn": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "ResetIn",
+        "type": "object"
+      },
+      "ResetConfirmIn": {
+        "properties": {
+          "uid": {
+            "title": "Uid",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "token",
+          "password"
+        ],
+        "title": "ResetConfirmIn",
+        "type": "object"
+      },
+      "MePatch": {
+        "properties": {
+          "full_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "goal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goal"
+          },
+          "birth_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birth Date"
+          },
+          "sex": {
+            "anyOf": [
+              {
+                "enum": [
+                  "f",
+                  "m",
+                  ""
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sex"
+          },
+          "height_cm": {
+            "anyOf": [
+              {
+                "maximum": 250.0,
+                "minimum": 80.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height Cm"
+          },
+          "target_weight_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Weight Kg"
+          },
+          "greeting": {
+            "anyOf": [
+              {
+                "enum": [
+                  "a",
+                  "o",
+                  "x"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Greeting"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "enum": [
+                  "light",
+                  "dark"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "show_in_podium": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show In Podium"
+          },
+          "share_achievements": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Achievements"
+          }
+        },
+        "title": "MePatch",
+        "type": "object"
+      },
+      "AnnouncementOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "pinned": {
+            "title": "Pinned",
+            "type": "boolean"
+          },
+          "publish_at": {
+            "format": "date-time",
+            "title": "Publish At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "pinned",
+          "publish_at"
+        ],
+        "title": "AnnouncementOut",
+        "type": "object"
+      },
+      "BirthdayOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "is_me": {
+            "title": "Is Me",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "avatar_url",
+          "is_me"
+        ],
+        "title": "BirthdayOut",
+        "type": "object"
+      },
+      "HomeOut": {
+        "properties": {
+          "greeting": {
+            "title": "Greeting",
+            "type": "string"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "membership": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MembershipBrief"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checked_in_today": {
+            "title": "Checked In Today",
+            "type": "boolean"
+          },
+          "today_booking": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SessionBrief"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missing_days_week": {
+            "title": "Missing Days Week",
+            "type": "integer"
+          },
+          "week_checkins": {
+            "items": {
+              "type": "boolean"
+            },
+            "title": "Week Checkins",
+            "type": "array"
+          },
+          "today_workout": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Today Workout"
+          },
+          "announcements": {
+            "items": {
+              "$ref": "#/components/schemas/AnnouncementOut"
+            },
+            "title": "Announcements",
+            "type": "array"
+          },
+          "birthdays": {
+            "items": {
+              "$ref": "#/components/schemas/BirthdayOut"
+            },
+            "title": "Birthdays",
+            "type": "array"
+          },
+          "whatsapp": {
+            "title": "Whatsapp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "greeting",
+          "first_name",
+          "membership",
+          "checked_in_today",
+          "today_booking",
+          "missing_days_week",
+          "week_checkins",
+          "today_workout",
+          "announcements",
+          "birthdays",
+          "whatsapp"
+        ],
+        "title": "HomeOut",
+        "type": "object"
+      },
+      "SessionBrief": {
+        "properties": {
+          "booking_id": {
+            "title": "Booking Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "start_at": {
+            "format": "date-time",
+            "title": "Start At",
+            "type": "string"
+          },
+          "end_at": {
+            "format": "date-time",
+            "title": "End At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "booking_id",
+          "name",
+          "type",
+          "start_at",
+          "end_at"
+        ],
+        "title": "SessionBrief",
+        "type": "object"
+      },
+      "PlanOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price_mxn": {
+            "title": "Price Mxn",
+            "type": "string"
+          },
+          "duration_months": {
+            "title": "Duration Months",
+            "type": "integer"
+          },
+          "includes_routine": {
+            "title": "Includes Routine",
+            "type": "boolean"
+          },
+          "includes_open_gym": {
+            "title": "Includes Open Gym",
+            "type": "boolean"
+          },
+          "includes_classes": {
+            "title": "Includes Classes",
+            "type": "boolean"
+          },
+          "default_sessions_per_week": {
+            "title": "Default Sessions Per Week",
+            "type": "integer"
+          },
+          "benefits": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Benefits",
+            "type": "array"
+          },
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "price_mxn",
+          "duration_months",
+          "includes_routine",
+          "includes_open_gym",
+          "includes_classes",
+          "default_sessions_per_week",
+          "benefits",
+          "active"
+        ],
+        "title": "PlanOut",
+        "type": "object"
+      },
+      "PublicGymOut": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "whatsapp": {
+            "title": "Whatsapp",
+            "type": "string"
+          },
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "maps_url": {
+            "title": "Maps Url",
+            "type": "string"
+          },
+          "hours": {
+            "title": "Hours",
+            "type": "string"
+          },
+          "plans": {
+            "items": {
+              "$ref": "#/components/schemas/PlanOut"
+            },
+            "title": "Plans",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "whatsapp",
+          "address",
+          "maps_url",
+          "hours",
+          "plans"
+        ],
+        "title": "PublicGymOut",
+        "type": "object"
+      },
+      "MembershipOut": {
+        "properties": {
+          "membership": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Membership"
+          },
+          "payments": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentOut"
+            },
+            "title": "Payments",
+            "type": "array"
+          },
+          "open_requests": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Open Requests",
+            "type": "array"
+          },
+          "whatsapp": {
+            "title": "Whatsapp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "membership",
+          "payments",
+          "open_requests",
+          "whatsapp"
+        ],
+        "title": "MembershipOut",
+        "type": "object"
+      },
+      "PaymentOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "amount_mxn": {
+            "title": "Amount Mxn",
+            "type": "string"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "paid_at": {
+            "format": "date",
+            "title": "Paid At",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "amount_mxn",
+          "method",
+          "paid_at",
+          "note"
+        ],
+        "title": "PaymentOut",
+        "type": "object"
+      },
+      "RequestIn": {
+        "properties": {
+          "type": {
+            "enum": [
+              "renewal",
+              "plan_change"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "RequestIn",
+        "type": "object"
+      },
+      "SessionOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "schedule_id": {
+            "title": "Schedule Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "start_at": {
+            "format": "date-time",
+            "title": "Start At",
+            "type": "string"
+          },
+          "end_at": {
+            "format": "date-time",
+            "title": "End At",
+            "type": "string"
+          },
+          "capacity": {
+            "title": "Capacity",
+            "type": "integer"
+          },
+          "taken": {
+            "title": "Taken",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "schedule_id",
+          "name",
+          "type",
+          "date",
+          "start_at",
+          "end_at",
+          "capacity",
+          "taken"
+        ],
+        "title": "SessionOut",
+        "type": "object"
+      },
+      "ScheduleIO": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "pattern": "^(open_gym|class)$",
+            "title": "Type",
+            "type": "string"
+          },
+          "weekdays": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Weekdays",
+            "type": "array"
+          },
+          "start_time": {
+            "format": "time",
+            "title": "Start Time",
+            "type": "string"
+          },
+          "duration_min": {
+            "default": 60,
+            "maximum": 300,
+            "minimum": 15,
+            "title": "Duration Min",
+            "type": "integer"
+          },
+          "capacity": {
+            "default": 12,
+            "maximum": 200,
+            "minimum": 1,
+            "title": "Capacity",
+            "type": "integer"
+          },
+          "requires_reservation": {
+            "default": true,
+            "title": "Requires Reservation",
+            "type": "boolean"
+          },
+          "active": {
+            "default": true,
+            "title": "Active",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "weekdays",
+          "start_time"
+        ],
+        "title": "ScheduleIO",
+        "type": "object"
+      },
+      "BookMonthIn": {
+        "properties": {
+          "month": {
+            "pattern": "^\\d{4}-\\d{2}$",
+            "title": "Month",
+            "type": "string"
+          },
+          "pattern": {
+            "items": {
+              "$ref": "#/components/schemas/PatternItem"
+            },
+            "title": "Pattern",
+            "type": "array"
+          }
+        },
+        "required": [
+          "month",
+          "pattern"
+        ],
+        "title": "BookMonthIn",
+        "type": "object"
+      },
+      "PatternItem": {
+        "properties": {
+          "weekday": {
+            "maximum": 6,
+            "minimum": 0,
+            "title": "Weekday",
+            "type": "integer"
+          },
+          "schedule_id": {
+            "title": "Schedule Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weekday",
+          "schedule_id"
+        ],
+        "title": "PatternItem",
+        "type": "object"
+      },
+      "BookingOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "session": {
+            "$ref": "#/components/schemas/SessionOut"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "session"
+        ],
+        "title": "BookingOut",
+        "type": "object"
+      },
+      "ChangeIn": {
+        "properties": {
+          "session_id": {
+            "title": "Session Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "session_id"
+        ],
+        "title": "ChangeIn",
+        "type": "object"
+      },
+      "CheckinIn": {
+        "properties": {
+          "token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          }
+        },
+        "title": "CheckinIn",
+        "type": "object"
+      },
+      "BodyOut": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
+          },
+          "waist_cm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waist Cm"
+          },
+          "hip_cm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hip Cm"
+          },
+          "chest_cm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chest Cm"
+          },
+          "arm_cm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arm Cm"
+          },
+          "leg_cm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leg Cm"
+          },
+          "arm_flexed_cm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arm Flexed Cm"
+          },
+          "wrist_cm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wrist Cm"
+          },
+          "calf_cm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calf Cm"
+          },
+          "body_fat_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Fat Pct"
+          },
+          "water_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Water Pct"
+          },
+          "muscle_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Muscle Pct"
+          }
+        },
+        "required": [
+          "date",
+          "weight_kg",
+          "waist_cm",
+          "hip_cm",
+          "chest_cm",
+          "arm_cm",
+          "leg_cm",
+          "arm_flexed_cm",
+          "wrist_cm",
+          "calf_cm",
+          "body_fat_pct",
+          "water_pct",
+          "muscle_pct"
+        ],
+        "title": "BodyOut",
+        "type": "object"
+      },
+      "BodyIn": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 400.0,
+                "exclusiveMinimum": 20.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
+          },
+          "waist_cm": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 250.0,
+                "exclusiveMinimum": 10.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waist Cm"
+          },
+          "hip_cm": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 250.0,
+                "exclusiveMinimum": 10.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hip Cm"
+          },
+          "chest_cm": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 250.0,
+                "exclusiveMinimum": 10.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chest Cm"
+          },
+          "arm_cm": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 250.0,
+                "exclusiveMinimum": 10.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arm Cm"
+          },
+          "leg_cm": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 250.0,
+                "exclusiveMinimum": 10.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leg Cm"
+          },
+          "arm_flexed_cm": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 250.0,
+                "exclusiveMinimum": 10.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arm Flexed Cm"
+          },
+          "wrist_cm": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 250.0,
+                "exclusiveMinimum": 5.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wrist Cm"
+          },
+          "calf_cm": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 250.0,
+                "exclusiveMinimum": 10.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calf Cm"
+          },
+          "body_fat_pct": {
+            "anyOf": [
+              {
+                "maximum": 70.0,
+                "minimum": 2.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Fat Pct"
+          },
+          "water_pct": {
+            "anyOf": [
+              {
+                "maximum": 80.0,
+                "minimum": 20.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Water Pct"
+          },
+          "muscle_pct": {
+            "anyOf": [
+              {
+                "maximum": 70.0,
+                "minimum": 10.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Muscle Pct"
+          }
+        },
+        "title": "BodyIn",
+        "type": "object"
+      },
+      "AnnouncementIO": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "body": {
+            "default": "",
+            "title": "Body",
+            "type": "string"
+          },
+          "pinned": {
+            "default": false,
+            "title": "Pinned",
+            "type": "boolean"
+          },
+          "publish_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publish At"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "AnnouncementIO",
+        "type": "object"
+      },
+      "SetIn": {
+        "properties": {
+          "item_id": {
+            "title": "Item Id",
+            "type": "integer"
+          },
+          "set_number": {
+            "maximum": 20,
+            "minimum": 1,
+            "title": "Set Number",
+            "type": "integer"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "maximum": 500.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
+          },
+          "reps": {
+            "anyOf": [
+              {
+                "maximum": 500,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reps"
+          },
+          "done": {
+            "default": true,
+            "title": "Done",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "item_id",
+          "set_number"
+        ],
+        "title": "SetIn",
+        "type": "object"
+      },
+      "SwapIn": {
+        "properties": {
+          "weekday": {
+            "maximum": 6,
+            "minimum": 0,
+            "title": "Weekday",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weekday"
+        ],
+        "title": "SwapIn",
+        "type": "object"
+      },
+      "ResolveIn": {
+        "properties": {
+          "source": {
+            "enum": [
+              "usda",
+              "off"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "external_id": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "External Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "external_id"
+        ],
+        "title": "ResolveIn",
+        "type": "object"
+      },
+      "CalcIn": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 5000,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "kcal": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 5000,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kcal"
+          }
+        },
+        "title": "CalcIn",
+        "type": "object"
+      },
+      "LogIn": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 5000,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "kcal": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 5000,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kcal"
+          },
+          "food_id": {
+            "title": "Food Id",
+            "type": "integer"
+          },
+          "meal": {
+            "enum": [
+              "breakfast",
+              "lunch",
+              "dinner",
+              "snack"
+            ],
+            "title": "Meal",
+            "type": "string"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          }
+        },
+        "required": [
+          "food_id",
+          "meal"
+        ],
+        "title": "LogIn",
+        "type": "object"
+      },
+      "ManualIn": {
+        "description": "Calorías sin alimento (por si no está en la lista).",
+        "properties": {
+          "meal": {
+            "enum": [
+              "breakfast",
+              "lunch",
+              "dinner",
+              "snack"
+            ],
+            "title": "Meal",
+            "type": "string"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "kcal": {
+            "exclusiveMinimum": 0,
+            "maximum": 5000,
+            "title": "Kcal",
+            "type": "number"
+          },
+          "protein_g": {
+            "anyOf": [
+              {
+                "maximum": 1000,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protein G"
+          },
+          "carbs_g": {
+            "anyOf": [
+              {
+                "maximum": 1000,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carbs G"
+          },
+          "fat_g": {
+            "anyOf": [
+              {
+                "maximum": 1000,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fat G"
+          }
+        },
+        "required": [
+          "meal",
+          "kcal"
+        ],
+        "title": "ManualIn",
+        "type": "object"
+      },
+      "ManualPatch": {
+        "properties": {
+          "meal": {
+            "anyOf": [
+              {
+                "enum": [
+                  "breakfast",
+                  "lunch",
+                  "dinner",
+                  "snack"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meal"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "kcal": {
+            "exclusiveMinimum": 0,
+            "maximum": 5000,
+            "title": "Kcal",
+            "type": "number"
+          },
+          "protein_g": {
+            "anyOf": [
+              {
+                "maximum": 1000,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protein G"
+          },
+          "carbs_g": {
+            "anyOf": [
+              {
+                "maximum": 1000,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carbs G"
+          },
+          "fat_g": {
+            "anyOf": [
+              {
+                "maximum": 1000,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fat G"
+          }
+        },
+        "required": [
+          "kcal"
+        ],
+        "title": "ManualPatch",
+        "type": "object"
+      },
+      "LogPatch": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 5000,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "kcal": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 5000,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kcal"
+          },
+          "meal": {
+            "anyOf": [
+              {
+                "enum": [
+                  "breakfast",
+                  "lunch",
+                  "dinner",
+                  "snack"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meal"
+          }
+        },
+        "title": "LogPatch",
+        "type": "object"
+      },
+      "GoalIn": {
+        "properties": {
+          "kcal": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 10000,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kcal"
+          },
+          "protein_g": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 1000,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protein G"
+          },
+          "carbs_g": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 1000,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carbs G"
+          },
+          "fat_g": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 1000,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fat G"
+          }
+        },
+        "title": "GoalIn",
+        "type": "object"
+      },
+      "MemberRow": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "role": {
+            "default": "member",
+            "title": "Role",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "membership_status": {
+            "title": "Membership Status",
+            "type": "string"
+          },
+          "plan_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Name"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "last_checkin": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Checkin"
+          }
+        },
+        "required": [
+          "id",
+          "full_name",
+          "email",
+          "phone",
+          "status",
+          "membership_status",
+          "plan_name",
+          "end_date",
+          "last_checkin"
+        ],
+        "title": "MemberRow",
+        "type": "object"
+      },
+      "MemberDetail": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "role": {
+            "default": "member",
+            "title": "Role",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "membership_status": {
+            "title": "Membership Status",
+            "type": "string"
+          },
+          "plan_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Name"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "last_checkin": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Checkin"
+          },
+          "coach_notes": {
+            "title": "Coach Notes",
+            "type": "string"
+          },
+          "goal": {
+            "title": "Goal",
+            "type": "string"
+          },
+          "sessions_per_week": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessions Per Week"
+          },
+          "membership_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Membership Id"
+          },
+          "payments": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Payments",
+            "type": "array"
+          },
+          "recent_checkins": {
+            "items": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "title": "Recent Checkins",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "full_name",
+          "email",
+          "phone",
+          "status",
+          "membership_status",
+          "plan_name",
+          "end_date",
+          "last_checkin",
+          "coach_notes",
+          "goal",
+          "sessions_per_week",
+          "membership_id",
+          "payments",
+          "recent_checkins"
+        ],
+        "title": "MemberDetail",
+        "type": "object"
+      },
+      "MemberPatch": {
+        "properties": {
+          "coach_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coach Notes"
+          },
+          "sessions_per_week": {
+            "anyOf": [
+              {
+                "maximum": 7,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessions Per Week"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "active",
+                  "blocked"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "member",
+                  "coach",
+                  "admin"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          }
+        },
+        "title": "MemberPatch",
+        "type": "object"
+      },
+      "DashboardOut": {
+        "properties": {
+          "checkins_today": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Checkins Today",
+            "type": "array"
+          },
+          "expiring": {
+            "items": {
+              "$ref": "#/components/schemas/MemberRow"
+            },
+            "title": "Expiring",
+            "type": "array"
+          },
+          "expired": {
+            "items": {
+              "$ref": "#/components/schemas/MemberRow"
+            },
+            "title": "Expired",
+            "type": "array"
+          },
+          "requests": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Requests",
+            "type": "array"
+          },
+          "sessions_today": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Sessions Today",
+            "type": "array"
+          }
+        },
+        "required": [
+          "checkins_today",
+          "expiring",
+          "expired",
+          "requests",
+          "sessions_today"
+        ],
+        "title": "DashboardOut",
+        "type": "object"
+      },
+      "PaymentIn": {
+        "properties": {
+          "member_id": {
+            "title": "Member Id",
+            "type": "integer"
+          },
+          "plan_id": {
+            "title": "Plan Id",
+            "type": "integer"
+          },
+          "amount_mxn": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount Mxn"
+          },
+          "method": {
+            "enum": [
+              "cash",
+              "transfer",
+              "other"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "sessions_per_week": {
+            "anyOf": [
+              {
+                "maximum": 7,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessions Per Week"
+          }
+        },
+        "required": [
+          "member_id",
+          "plan_id",
+          "amount_mxn",
+          "method"
+        ],
+        "title": "PaymentIn",
+        "type": "object"
+      },
+      "PlanIn": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price_mxn": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Price Mxn"
+          },
+          "duration_months": {
+            "default": 1,
+            "maximum": 12,
+            "minimum": 1,
+            "title": "Duration Months",
+            "type": "integer"
+          },
+          "includes_routine": {
+            "default": false,
+            "title": "Includes Routine",
+            "type": "boolean"
+          },
+          "includes_open_gym": {
+            "default": false,
+            "title": "Includes Open Gym",
+            "type": "boolean"
+          },
+          "includes_classes": {
+            "default": false,
+            "title": "Includes Classes",
+            "type": "boolean"
+          },
+          "default_sessions_per_week": {
+            "default": 3,
+            "maximum": 7,
+            "minimum": 1,
+            "title": "Default Sessions Per Week",
+            "type": "integer"
+          },
+          "benefits": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Benefits",
+            "type": "array"
+          },
+          "active": {
+            "default": true,
+            "title": "Active",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "price_mxn"
+        ],
+        "title": "PlanIn",
+        "type": "object"
+      },
+      "SettingsIO": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "whatsapp": {
+            "title": "Whatsapp",
+            "type": "string"
+          },
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "maps_url": {
+            "title": "Maps Url",
+            "type": "string"
+          },
+          "hours": {
+            "title": "Hours",
+            "type": "string"
+          },
+          "grace_days": {
+            "title": "Grace Days",
+            "type": "integer"
+          },
+          "expiring_days": {
+            "title": "Expiring Days",
+            "type": "integer"
+          },
+          "change_deadline_hours": {
+            "title": "Change Deadline Hours",
+            "type": "integer"
+          },
+          "checkin_early_min": {
+            "title": "Checkin Early Min",
+            "type": "integer"
+          },
+          "booking_open_day": {
+            "title": "Booking Open Day",
+            "type": "integer"
+          },
+          "points_config": {
+            "additionalProperties": true,
+            "title": "Points Config",
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "whatsapp",
+          "address",
+          "maps_url",
+          "hours",
+          "grace_days",
+          "expiring_days",
+          "change_deadline_hours",
+          "checkin_early_min",
+          "booking_open_day",
+          "points_config"
+        ],
+        "title": "SettingsIO",
+        "type": "object"
+      },
+      "ExtraSessionIn": {
+        "properties": {
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "pattern": "^(open_gym|class)$",
+            "title": "Type",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "start_time": {
+            "format": "time",
+            "title": "Start Time",
+            "type": "string"
+          },
+          "duration_min": {
+            "default": 60,
+            "maximum": 300,
+            "minimum": 15,
+            "title": "Duration Min",
+            "type": "integer"
+          },
+          "capacity": {
+            "default": 12,
+            "maximum": 200,
+            "minimum": 1,
+            "title": "Capacity",
+            "type": "integer"
+          },
+          "requires_reservation": {
+            "default": true,
+            "title": "Requires Reservation",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "date",
+          "start_time"
+        ],
+        "title": "ExtraSessionIn",
+        "type": "object"
+      },
+      "SessionEditIn": {
+        "properties": {
+          "start_time": {
+            "format": "time",
+            "title": "Start Time",
+            "type": "string"
+          },
+          "duration_min": {
+            "default": 60,
+            "maximum": 300,
+            "minimum": 15,
+            "title": "Duration Min",
+            "type": "integer"
+          },
+          "capacity": {
+            "default": 12,
+            "maximum": 200,
+            "minimum": 1,
+            "title": "Capacity",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "start_time"
+        ],
+        "title": "SessionEditIn",
+        "type": "object"
+      },
+      "CoachBookingIn": {
+        "properties": {
+          "member_id": {
+            "title": "Member Id",
+            "type": "integer"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "member_id",
+          "session_id"
+        ],
+        "title": "CoachBookingIn",
+        "type": "object"
+      },
+      "CustomIn": {
+        "properties": {
+          "name": {
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          },
+          "muscle_group": {
+            "default": "",
+            "title": "Muscle Group",
+            "type": "string"
+          },
+          "equipment": {
+            "default": "",
+            "title": "Equipment",
+            "type": "string"
+          },
+          "instructions_es": {
+            "default": "",
+            "title": "Instructions Es",
+            "type": "string"
+          },
+          "video_url": {
+            "default": "",
+            "title": "Video Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CustomIn",
+        "type": "object"
+      },
+      "ImportIn": {
+        "properties": {
+          "external_id": {
+            "title": "External Id",
+            "type": "string"
+          },
+          "name_es": {
+            "default": "",
+            "title": "Name Es",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "gif_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gif Url"
+          },
+          "body_parts": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Body Parts",
+            "type": "array"
+          },
+          "equipments": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Equipments",
+            "type": "array"
+          },
+          "target_muscles": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Target Muscles",
+            "type": "array"
+          },
+          "secondary_muscles": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Secondary Muscles",
+            "type": "array"
+          },
+          "instructions": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Instructions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "external_id"
+        ],
+        "title": "ImportIn",
+        "type": "object"
+      },
+      "ExercisePatch": {
+        "properties": {
+          "name_es": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Es"
+          },
+          "instructions_es": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructions Es"
+          },
+          "video_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Url"
+          },
+          "muscle_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Muscle Group"
+          },
+          "equipment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equipment"
+          },
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          }
+        },
+        "title": "ExercisePatch",
+        "type": "object"
+      },
+      "DayIn": {
+        "properties": {
+          "label": {
+            "default": "",
+            "title": "Label",
+            "type": "string"
+          },
+          "focus": {
+            "default": "",
+            "title": "Focus",
+            "type": "string"
+          },
+          "items": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ItemIn"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "DayIn",
+        "type": "object"
+      },
+      "ItemIn": {
+        "properties": {
+          "exercise_id": {
+            "title": "Exercise Id",
+            "type": "integer"
+          },
+          "sets": {
+            "default": 3,
+            "maximum": 20,
+            "minimum": 1,
+            "title": "Sets",
+            "type": "integer"
+          },
+          "reps": {
+            "anyOf": [
+              {
+                "maximum": 200,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reps"
+          },
+          "duration_s": {
+            "anyOf": [
+              {
+                "maximum": 3600,
+                "minimum": 5,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration S"
+          },
+          "target_weight_kg": {
+            "anyOf": [
+              {
+                "maximum": 500.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Weight Kg"
+          },
+          "rest_s": {
+            "default": 90,
+            "maximum": 900,
+            "minimum": 0,
+            "title": "Rest S",
+            "type": "integer"
+          },
+          "notes": {
+            "default": "",
+            "title": "Notes",
+            "type": "string"
+          }
+        },
+        "required": [
+          "exercise_id"
+        ],
+        "title": "ItemIn",
+        "type": "object"
+      },
+      "CopyIn": {
+        "properties": {
+          "from_weekday": {
+            "maximum": 6,
+            "minimum": 0,
+            "title": "From Weekday",
+            "type": "integer"
+          },
+          "to_weekday": {
+            "maximum": 6,
+            "minimum": 0,
+            "title": "To Weekday",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "from_weekday",
+          "to_weekday"
+        ],
+        "title": "CopyIn",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "SessionAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessionid"
+      }
+    }
+  },
+  "servers": []
+}
