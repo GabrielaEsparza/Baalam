@@ -11,4 +11,4 @@ boto3>=1.35
 django-anymail[resend]>=12
 requests>=2.32
 Pillow>=11
-Brotli>=1.1  # whitenoise: estáticos en .br (más chicos que .gz)
+Brotli>=1.1
