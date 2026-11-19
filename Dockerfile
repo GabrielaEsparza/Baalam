@@ -1,5 +1,5 @@
 # --- Etapa 1: build de React ---
-FROM node:22-alpine AS web
+FROM node:24-alpine AS web
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
