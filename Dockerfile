@@ -19,7 +19,7 @@ RUN DEBUG=1 python manage.py collectstatic --noinput
 
 # Barato y suficiente para un gym: 2 procesos × 4 hilos (~8 peticiones a la vez),
 # --preload comparte memoria entre procesos y --max-requests recicla procesos para que la RAM no crezca.
-CMD python manage.py migrate --noinput && python manage.py createcachetable && \
+CMD python manage.py migrate --noinput && python manage.py createcachetable && python manage.py bootstrap && \
     gunicorn config.wsgi --bind 0.0.0.0:${PORT:-8000} --preload \
       --workers ${WEB_CONCURRENCY:-2} --threads 4 --worker-class gthread \
       --max-requests 1000 --max-requests-jitter 100 --timeout 60
