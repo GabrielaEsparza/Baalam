@@ -2146,6 +2146,124 @@
         ]
       }
     },
+    "/api/coach/memberships/{membership_id}": {
+      "patch": {
+        "operationId": "apps_memberships_api_correct_membership",
+        "summary": "Correct Membership",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "membership_id",
+            "schema": {
+              "title": "Membership Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MembershipDatesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/memberships/{membership_id}/remove": {
+      "post": {
+        "operationId": "apps_memberships_api_remove_membership",
+        "summary": "Remove Membership",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "membership_id",
+            "schema": {
+              "title": "Membership Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/coach/payments/{payment_id}": {
+      "delete": {
+        "operationId": "apps_memberships_api_delete_payment",
+        "summary": "Delete Payment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "payment_id",
+            "schema": {
+              "title": "Payment Id",
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "coach"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/coach/memberships/{membership_id}/pause": {
       "post": {
         "operationId": "apps_memberships_api_pause",
@@ -5762,6 +5880,18 @@
             ],
             "title": "Membership Id"
           },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
           "payments": {
             "items": {
               "additionalProperties": true,
@@ -6048,6 +6178,26 @@
           "price_mxn"
         ],
         "title": "PlanIn",
+        "type": "object"
+      },
+      "MembershipDatesIn": {
+        "properties": {
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date"
+        ],
+        "title": "MembershipDatesIn",
         "type": "object"
       },
       "SettingsIO": {

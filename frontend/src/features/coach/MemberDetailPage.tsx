@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Banknote, ClipboardList, MessageCircle, Pause, Play, ShieldCheck, UserCheck } from "lucide-react";
+import { ArrowLeft, Banknote, CalendarCog, ClipboardList, MessageCircle, Pause, Play, ShieldCheck, Trash2, UserCheck, UserX } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { CoachNutritionCard } from "@/features/nutrition/CoachNutritionCard";
 import { api, unwrap } from "@/api/client";
 import { useMe } from "@/app/session";
 import { Button, Card, ErrorBox, Field, Input, SectionTitle, Sheet, Spinner, StatusBadge, Stepper, Tabs } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { fmtDate, fmtMoney, fmtTime, methodLabel, waLink } from "@/lib/format";
+import { fmtDate, fmtMoney, fmtTime, isoDate, methodLabel, waLink } from "@/lib/format";
 
 export default function MemberDetailPage() {
   const id = Number(useParams().id);
@@ -17,6 +17,8 @@ export default function MemberDetailPage() {
   const qc = useQueryClient();
   const toast = useToast();
   const [paySheet, setPaySheet] = useState(false);
+  const [fixSheet, setFixSheet] = useState(false);
+  const [delPay, setDelPay] = useState<number | null>(null);
   const [notes, setNotes] = useState<string | null>(null);
 
   const key = ["coach", "member", id];
@@ -70,6 +72,17 @@ export default function MemberDetailPage() {
     onError: onErr,
   });
 
+  const removePayment = useMutation({
+    mutationFn: (pid: number) => unwrap(api.DELETE("/api/coach/payments/{payment_id}", { params: { path: { payment_id: pid } } })),
+    onSuccess: () => {
+      toast("Pago borrado del historial");
+      setDelPay(null);
+      refresh();
+      qc.invalidateQueries({ queryKey: ["coach", "stats"] });
+    },
+    onError: onErr,
+  });
+
   if (isLoading) return <Spinner />;
   if (error || !m) return <ErrorBox error={error} onRetry={refetch} />;
   const payments = m.payments as unknown as { id: number; amount_mxn: string; method: string; paid_at: string; note: string }[];
@@ -98,14 +111,26 @@ export default function MemberDetailPage() {
           <div>
             <p className="t-label">Membresía</p>
             <p className="t-h2">{m.plan_name ?? "Sin plan"}</p>
-            {m.end_date && <p className="text-[15px] text-ink-2">Vence {fmtDate(m.end_date, { day: "numeric", month: "long", year: "numeric" })}</p>}
+            {m.start_date && m.end_date && (
+              <p className="text-[15px] text-ink-2">
+                {fmtDate(m.start_date, { day: "numeric", month: "short" })} → vence{" "}
+                {fmtDate(m.end_date, { day: "numeric", month: "long", year: "numeric" })}
+              </p>
+            )}
           </div>
           <StatusBadge status={m.membership_status} />
         </div>
         {isAdmin && (
-          <Button full icon={Banknote} onClick={() => setPaySheet(true)}>
-            Registrar pago
-          </Button>
+          <div className="space-y-2">
+            <Button full icon={Banknote} onClick={() => setPaySheet(true)}>
+              Registrar pago
+            </Button>
+            {m.membership_id && (
+              <Button full variant="secondary" size="sm" icon={CalendarCog} onClick={() => setFixSheet(true)}>
+                Corregir fechas o quitar membresía
+              </Button>
+            )}
+          </div>
         )}
         <div className="grid grid-cols-2 gap-2">
           <Button variant="secondary" size="sm" icon={UserCheck} loading={checkin.isPending} onClick={() => checkin.mutate()}>
@@ -217,16 +242,56 @@ export default function MemberDetailPage() {
           ) : (
             <Card className="divide-y divide-line p-0">
               {payments.map((p) => (
-                <div key={p.id} className="flex justify-between px-4 py-3">
-                  <span>
-                    <b>{fmtMoney(p.amount_mxn)}</b> <span className="text-ink-2">· {methodLabel[p.method]}</span>
-                  </span>
-                  <span className="text-sm text-ink-2">{fmtDate(p.paid_at, { day: "numeric", month: "short", year: "numeric" })}</span>
+                <div key={p.id} className="px-4 py-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span>
+                      <b>{fmtMoney(p.amount_mxn)}</b> <span className="text-ink-2">· {methodLabel[p.method]}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-sm text-ink-2">{fmtDate(p.paid_at, { day: "numeric", month: "short", year: "numeric" })}</span>
+                      <button
+                        aria-label="Borrar pago"
+                        onClick={() => setDelPay(delPay === p.id ? null : p.id)}
+                        className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-surface-2 hover:text-danger"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </span>
+                  </div>
+                  {delPay === p.id && (
+                    <div className="mt-2 space-y-2 rounded-input bg-danger/10 p-3 text-[15px]">
+                      <p>¿Borrar este pago? Se quita del historial y de las gráficas. Las fechas de la membresía no cambian (corrígelas aparte si hace falta).</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button size="sm" variant="secondary" onClick={() => setDelPay(null)}>
+                          No
+                        </Button>
+                        <Button size="sm" variant="danger" loading={removePayment.isPending} onClick={() => removePayment.mutate(p.id)}>
+                          Sí, borrar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </Card>
           )}
         </>
+      )}
+
+      {m.membership_id && m.start_date && m.end_date && (
+        <FixMembershipSheet
+          key={`${m.start_date}-${m.end_date}`}
+          open={fixSheet}
+          onClose={() => setFixSheet(false)}
+          membershipId={m.membership_id}
+          start={m.start_date}
+          end={m.end_date}
+          name={m.full_name.split(" ")[0]}
+          onDone={() => {
+            setFixSheet(false);
+            refresh();
+          }}
+        />
       )}
 
       <PaymentSheet
@@ -263,6 +328,8 @@ function PaymentSheet({
   const [method, setMethod] = useState<"cash" | "transfer" | "other">("cash");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
+  const todayIso = isoDate(new Date());
+  const [paidAt, setPaidAt] = useState(todayIso);
   const plan = active.find((p) => p.id === planId) ?? active.find((p) => p.name === currentPlan) ?? active[0];
 
   const pay = useMutation({
@@ -275,6 +342,7 @@ function PaymentSheet({
             amount_mxn: amount || String(plan!.price_mxn),
             method,
             note,
+            paid_at: paidAt || todayIso,
           } as never,
         }),
       ),
@@ -282,6 +350,7 @@ function PaymentSheet({
       toast("Pago registrado. La vigencia se extendió.");
       setAmount("");
       setNote("");
+      setPaidAt(todayIso);
       onDone();
     },
     onError: (e) => toast((e as Error).message, "error"),
@@ -324,6 +393,9 @@ function PaymentSheet({
               ]}
             />
           </div>
+          <Field label="Fecha en que pagó">
+            <Input type="date" value={paidAt} max={todayIso} onChange={(e) => setPaidAt(e.target.value)} />
+          </Field>
           <Field label="Nota (opcional)">
             <Input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} />
           </Field>
@@ -331,10 +403,102 @@ function PaymentSheet({
             Registrar {fmtMoney(amount || plan.price_mxn)}
           </Button>
           <p className="text-sm text-ink-2">
-            Mismo plan y vigente: suma {plan.duration_months} mes desde el vencimiento. Vencida o cambio de plan: empieza hoy.
+            Mismo plan y vigente ese día: suma {plan.duration_months} mes desde el vencimiento. Si estaba vencida o cambia de plan, la mensualidad empieza el día en que pagó.
           </p>
         </div>
       )}
+    </Sheet>
+  );
+}
+
+function FixMembershipSheet({
+  open,
+  onClose,
+  membershipId,
+  start,
+  end,
+  name,
+  onDone,
+}: {
+  open: boolean;
+  onClose: () => void;
+  membershipId: number;
+  start: string;
+  end: string;
+  name: string;
+  onDone: () => void;
+}) {
+  const toast = useToast();
+  const [s, setS] = useState(start);
+  const [e, setE] = useState(end);
+  const [confirm, setConfirm] = useState(false);
+  const onError = (err: unknown) => toast((err as Error).message, "error");
+
+  const save = useMutation({
+    mutationFn: () =>
+      unwrap(
+        api.PATCH("/api/coach/memberships/{membership_id}", {
+          params: { path: { membership_id: membershipId } },
+          body: { start_date: s, end_date: e },
+        }),
+      ),
+    onSuccess: () => {
+      toast("Fechas corregidas");
+      onDone();
+    },
+    onError,
+  });
+  const remove = useMutation({
+    mutationFn: () =>
+      unwrap(api.POST("/api/coach/memberships/{membership_id}/remove", { params: { path: { membership_id: membershipId } } })),
+    onSuccess: () => {
+      toast("Membresía quitada");
+      setConfirm(false);
+      onDone();
+    },
+    onError,
+  });
+
+  return (
+    <Sheet open={open} onClose={onClose} title="Corregir membresía">
+      <div className="space-y-5">
+        <div className="space-y-3">
+          <p className="text-[15px] text-ink-2">Si se registró con la fecha equivocada, ajústala aquí.</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Inicio">
+              <Input type="date" value={s} onChange={(ev) => setS(ev.target.value)} />
+            </Field>
+            <Field label="Vence">
+              <Input type="date" value={e} min={s} onChange={(ev) => setE(ev.target.value)} />
+            </Field>
+          </div>
+          <Button full variant="dark" loading={save.isPending} disabled={!s || !e || (s === start && e === end)} onClick={() => save.mutate()}>
+            Guardar fechas
+          </Button>
+        </div>
+
+        <div className="border-t border-line pt-5">
+          {confirm ? (
+            <div className="space-y-2 rounded-card border border-danger/40 bg-danger/10 p-4">
+              <p className="text-[15px] font-medium">
+                ¿Quitarle la membresía a {name}? Queda vencida desde ayer, sin días de gracia, y ya no podrá usar la app. Sus pagos y su progreso se conservan.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="secondary" onClick={() => setConfirm(false)}>
+                  No
+                </Button>
+                <Button variant="danger" loading={remove.isPending} onClick={() => remove.mutate()}>
+                  Sí, quitar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button full variant="danger" icon={UserX} onClick={() => setConfirm(true)}>
+              Quitar membresía
+            </Button>
+          )}
+        </div>
+      </div>
     </Sheet>
   );
 }

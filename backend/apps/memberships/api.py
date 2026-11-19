@@ -171,6 +171,32 @@ def update_plan(request, plan_id: int, data: PlanIn):
     return plan
 
 
+class MembershipDatesIn(Schema):
+    start_date: date
+    end_date: date
+
+
+@coach_router.patch("/memberships/{membership_id}", response=dict)
+@admin_required
+def correct_membership(request, membership_id: int, data: MembershipDatesIn):
+    m = services.correct_dates(get_object_or_404(Membership, id=membership_id), **data.dict())
+    return membership_brief(m.member)
+
+
+@coach_router.post("/memberships/{membership_id}/remove", response=dict)
+@admin_required
+def remove_membership(request, membership_id: int):
+    m = services.remove_membership(get_object_or_404(Membership, id=membership_id))
+    return {"ok": True, "membership": membership_brief(m.member)}
+
+
+@coach_router.delete("/payments/{payment_id}")
+@admin_required
+def delete_payment(request, payment_id: int):
+    services.delete_payment(payment_id)
+    return {"ok": True}
+
+
 @coach_router.post("/memberships/{membership_id}/pause")
 @admin_required
 def pause(request, membership_id: int):

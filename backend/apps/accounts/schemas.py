@@ -130,6 +130,7 @@ class MemberDetail(MemberRow):
     goal: str
     sessions_per_week: int | None
     membership_id: int | None
+    start_date: date | None = None
     payments: list[dict]
     recent_checkins: list[datetime]
 

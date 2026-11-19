@@ -891,6 +891,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/coach/memberships/{membership_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Correct Membership */
+        patch: operations["apps_memberships_api_correct_membership"];
+        trace?: never;
+    };
+    "/api/coach/memberships/{membership_id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove Membership */
+        post: operations["apps_memberships_api_remove_membership"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/coach/payments/{payment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Payment */
+        delete: operations["apps_memberships_api_delete_payment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/coach/memberships/{membership_id}/pause": {
         parameters: {
             query?: never;
@@ -2064,6 +2115,8 @@ export interface components {
             sessions_per_week: number | null;
             /** Membership Id */
             membership_id: number | null;
+            /** Start Date */
+            start_date?: string | null;
             /** Payments */
             payments: {
                 [key: string]: unknown;
@@ -2165,6 +2218,19 @@ export interface components {
              * @default true
              */
             active: boolean;
+        };
+        /** MembershipDatesIn */
+        MembershipDatesIn: {
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /**
+             * End Date
+             * Format: date
+             */
+            end_date: string;
         };
         /** SettingsIO */
         SettingsIO: {
@@ -3777,6 +3843,78 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PlanOut"];
                 };
+            };
+        };
+    };
+    apps_memberships_api_correct_membership: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                membership_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MembershipDatesIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_memberships_api_remove_membership: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                membership_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_memberships_api_delete_payment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

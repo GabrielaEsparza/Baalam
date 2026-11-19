@@ -308,6 +308,7 @@ def member_detail(request, member_id: int):
         "goal": p.goal,
         "sessions_per_week": m.sessions_per_week if m else None,
         "membership_id": m.id if m else None,
+        "start_date": m.start_date if m else None,
         "payments": (
             list(p.user.payments.values("id", "amount_mxn", "method", "paid_at", "note")[:24]) if pays else []
         ),
