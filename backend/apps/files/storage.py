@@ -31,7 +31,7 @@ class DatabaseStorage(Storage):
         """Solo un pedazo del archivo (para videos), sin cargarlo completo en memoria."""
         table = self._model()._meta.db_table
         with connection.cursor() as cur:
-            cur.execute(f"SELECT substr(content, %s, %s) FROM {table} WHERE name = %s", [start + 1, length, name])
+            cur.execute(f"SELECT substr(content, CAST(%s AS integer), CAST(%s AS integer)) FROM {table} WHERE name = %s", [start + 1, length, name])
             row = cur.fetchone()
         if row is None:
             raise FileNotFoundError(name)
