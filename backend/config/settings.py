@@ -159,6 +159,8 @@ CACHES = {"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", 
 
 LOGGING = {
     "version": 1,
+    # Sin esto Django silencia sus propios loggers y los errores 500 no aparecen en Railway.
+    "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
 }
