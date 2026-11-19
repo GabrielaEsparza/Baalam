@@ -41,7 +41,7 @@ Toda regla de negocio vive en `apps/<app>/services.py`. `api.py` solo valida y l
 1. Servicio **web** desde este repo (usa `Dockerfile` y `railway.json`).
 2. Plantilla **Postgres** → inyecta `DATABASE_URL`.
 3. Variables: `DEBUG=0`, `SECRET_KEY`, `QR_SECRET`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS=https://tu-dominio`, `RESEND_API_KEY`, y las del bucket (`BUCKET_NAME`, `BUCKET_ENDPOINT`, `BUCKET_ACCESS_KEY_ID`, `BUCKET_SECRET_ACCESS_KEY`).
-4. **Sin servicio cron**: la misma app corre `nightly` todos los días a las 02:00 (hilo en `backend/gunicorn.conf.py`)
+4. **Sin servicio cron**: la misma app corre `nightly` todos los días a las 02:00 (un hilo en `backend/gunicorn.conf.py` la lanza como proceso aparte)
    y, si estuvo apagada a esa hora, al arrancar. Hace vencimientos, faltas, genera horarios, abre la reserva del mes
    siguiente desde el día 25 y cierra el podio. Para usar un cron de Railway en su lugar: `NIGHTLY_IN_WEB=0`.
 5. Cuenta de la coach sin terminal: variables `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` (se crea al arrancar si no existe;
