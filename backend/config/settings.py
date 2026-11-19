@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "apps.podium",
     "apps.community",
     "apps.nutrition",
+    "apps.files",
 ]
 
 MIDDLEWARE = [
@@ -110,8 +111,13 @@ STORAGES = {
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
 MEDIA_URL = "/media/"
-# En Railway, un volumen montado aquí guarda las fotos entre deploys (el disco del contenedor se borra).
 MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT") or BASE_DIR / "media")
+
+# Fotos y videos subidos: en producción se guardan en Postgres (Railway borra el disco en cada
+# deploy y la base de datos ya existe: sin servicios ni cuentas extra). En desarrollo, en disco.
+MEDIA_IN_DB = env_bool("MEDIA_IN_DB", not DEBUG)
+if MEDIA_IN_DB:
+    STORAGES["default"] = {"BACKEND": "apps.files.storage.DatabaseStorage"}
 
 if os.environ.get("BUCKET_NAME"):
     STORAGES["default"] = {

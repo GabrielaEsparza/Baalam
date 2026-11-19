@@ -1,17 +1,17 @@
 """Archivos subidos (fotos de perfil, fotos/videos de ejercicios) en producción.
 
-Django no sirve /media/ con DEBUG apagado, así que esta vista lo hace, solo para personas
-con sesión iniciada. Soporta peticiones por rangos (Range), que Safari en iPhone exige
-para reproducir videos. Los nombres cambian al reemplazar un archivo, así que el navegador
-puede guardarlos en caché sin riesgo de mostrar la versión vieja.
+Se leen del storage configurado (en producción, la base de datos). Solo para personas con
+sesión iniciada. Soporta peticiones por rangos (Range), que Safari en iPhone exige para
+reproducir videos. Los nombres cambian al reemplazar un archivo, así que el navegador puede
+guardarlos en caché sin riesgo de mostrar la versión vieja.
 """
 import mimetypes
+import posixpath
 import re
-from pathlib import Path
+import zlib
 
-from django.conf import settings
-from django.http import FileResponse, Http404, HttpResponse, HttpResponseNotModified
-from django.utils.http import http_date
+from django.core.files.storage import default_storage
+from django.http import Http404, HttpResponse, HttpResponseNotModified, StreamingHttpResponse
 
 # Solo estas carpetas son visibles; lo demás (p. ej. fotos de progreso) nunca se sirve por aquí.
 PUBLIC_DIRS = ("avatars", "exercises", "announcements")
@@ -19,20 +19,30 @@ _RANGE = re.compile(r"^bytes=(\d*)-(\d*)$")
 CHUNK = 4 * 1024 * 1024  # máximo por respuesta parcial: el navegador pide el resto después
 
 
+def _read(name: str, start: int, length: int) -> bytes:
+    if hasattr(default_storage, "read_range"):
+        return default_storage.read_range(name, start, length)
+    with default_storage.open(name, "rb") as fh:
+        fh.seek(start)
+        return fh.read(length)
+
+
 def serve_media(request, path: str):
     if not request.user.is_authenticated:
         return HttpResponse(status=401)
-    root = Path(settings.MEDIA_ROOT).resolve()
-    file = (root / path).resolve()
-    if not file.is_relative_to(root) or file.parent.name not in PUBLIC_DIRS or not file.is_file():
+    name = posixpath.normpath(path)
+    folder, _, base = name.partition("/")
+    if name.startswith(("/", "..")) or folder not in PUBLIC_DIRS or not base or "/" in base:
         raise Http404
-    stat = file.stat()
-    etag = f'"{int(stat.st_mtime)}-{stat.st_size}"'
+    try:
+        size = default_storage.size(name)
+    except (FileNotFoundError, OSError):
+        raise Http404
+    etag = f'"{zlib.crc32(name.encode()):x}-{size}"'
     if request.headers.get("If-None-Match") == etag:
         return HttpResponseNotModified()
 
-    ctype = mimetypes.guess_type(file.name)[0] or "application/octet-stream"
-    size = stat.st_size
+    ctype = mimetypes.guess_type(name)[0] or "application/octet-stream"
     m = _RANGE.match(request.headers.get("Range", ""))
     if m and (m[1] or m[2]):
         if m[1]:
@@ -44,15 +54,15 @@ def serve_media(request, path: str):
             resp = HttpResponse(status=416)
             resp["Content-Range"] = f"bytes */{size}"
             return resp
-        with file.open("rb") as fh:
-            fh.seek(start)
-            data = fh.read(end - start + 1)
-        resp = HttpResponse(data, status=206, content_type=ctype)
+        resp = HttpResponse(_read(name, start, end - start + 1), status=206, content_type=ctype)
         resp["Content-Range"] = f"bytes {start}-{end}/{size}"
+    elif size > CHUNK:
+        # Archivo grande sin Range: se manda por pedazos para no cargarlo entero en memoria.
+        resp = StreamingHttpResponse((_read(name, i, CHUNK) for i in range(0, size, CHUNK)), content_type=ctype)
+        resp["Content-Length"] = str(size)
     else:
-        resp = FileResponse(file.open("rb"), content_type=ctype)
+        resp = HttpResponse(_read(name, 0, size), content_type=ctype)
     resp["Accept-Ranges"] = "bytes"
     resp["ETag"] = etag
-    resp["Last-Modified"] = http_date(stat.st_mtime)
     resp["Cache-Control"] = "private, max-age=2592000"
     return resp

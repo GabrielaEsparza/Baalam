@@ -135,10 +135,16 @@ class SearchTests(TestCase):
         with mock.patch.object(sources, "usda_search", return_value=usda), mock.patch.object(sources, "off_search", return_value=off):
             r = sources.search("yogurt")
         names = [(i["source"], i["external_id"]) for i in r["items"]]
-        self.assertEqual(names[:3], [("usda", "0"), ("usda", "1"), ("usda", "2")])
-        self.assertEqual(names[3:5], [("off", "222"), ("off", "333")])  # mexicanos antes del resto
+        # "yogurt" es un alimento básico: 2 genéricos de USDA, luego lo mexicano
+        self.assertEqual(names[:4], [("usda", "0"), ("usda", "1"), ("off", "222"), ("off", "333")])
+        self.assertEqual(names[4], ("usda", "2"))
         self.assertNotIn(("off", "111"), names)  # duplicado eliminado
         self.assertTrue(r["has_more"])
+
+        # Búsqueda de producto (no básica): lo mexicano va primero de todo
+        with mock.patch.object(sources, "usda_search", return_value=usda), mock.patch.object(sources, "off_search", return_value=off):
+            r = sources.search("yogurt griego lala")
+        self.assertEqual([(i["source"], i["external_id"]) for i in r["items"]][:2], [("off", "222"), ("off", "333")])
 
         with mock.patch.object(sources, "usda_search", side_effect=ServiceError("USDA caído")), mock.patch.object(
             sources, "off_search", return_value=off
@@ -146,6 +152,21 @@ class SearchTests(TestCase):
             r = sources.search("yogurt")
         self.assertIn("usda", r["errors"])
         self.assertTrue(r["items"])
+
+    def test_off_search_asks_mexico_first(self):
+        def product(code, name, mx):
+            return {"code": code, "product_name": name, "brands": "X", "countries_tags": ["en:mexico"] if mx else ["en:united-states"],
+                    "nutriments": {"energy-kcal_100g": 50, "proteins_100g": 3, "carbohydrates_100g": 5, "fat_100g": 2}}
+
+        def fake(q, page, size, mexico):
+            return ([product("1", "Tortillas MX", True)], 1) if mexico else ([product("2", "Flour Tortillas", False), product("1", "Tortillas MX", True)], 3)
+
+        with mock.patch.object(sources, "_off_query", side_effect=fake) as m:
+            r = sources.off_search("tortillas")
+        self.assertEqual([c.args[3] for c in m.call_args_list], [True, False])
+        self.assertEqual([i["external_id"] for i in r["items"]], ["1", "2"])  # sin repetir
+        self.assertTrue(r["items"][0]["is_mexican"])
+        self.assertTrue(r["has_more"])
 
     def test_short_query_rejected(self):
         with self.assertRaises(ServiceError):

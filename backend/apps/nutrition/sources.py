@@ -315,23 +315,48 @@ def off_normalize(p: dict) -> dict | None:
     return out
 
 
-def off_search(q: str, page: int = 1, page_size: int = 15) -> dict:
-    params = {"q": q, "page": page, "page_size": page_size, "fields": OFF_FIELDS}
+def _off_query(q: str, page: int, page_size: int, mexico: bool) -> tuple[list, int]:
+    """Una consulta a OFF. Con `mexico=True` solo trae productos vendidos en México."""
+    query = f'{q} countries_tags:"en:mexico"' if mexico else q
+    params = {"q": query, "page": page, "page_size": page_size, "fields": OFF_FIELDS, "langs": "es"}
     try:
-        data = _get(OFF_SEARCH, params, _key("off", q, page, page_size), SEARCH_TTL, "Open Food Facts") or {}
-        products, page_count = data.get("hits") or [], data.get("page_count") or 0
+        data = _get(OFF_SEARCH, params, _key("off", query, page, page_size), SEARCH_TTL, "Open Food Facts") or {}
+        return data.get("hits") or [], data.get("page_count") or 0
     except ServiceError:
         # Respaldo: buscador clásico (más lento y con límites estrictos)
         legacy = {
             "search_terms": q, "search_simple": 1, "action": "process", "json": 1,
-            "page": page, "page_size": page_size, "fields": OFF_FIELDS,
+            "page": page, "page_size": page_size, "fields": OFF_FIELDS, "lc": "es",
         }
-        data = _get(OFF_LEGACY_SEARCH, legacy, _key("off-legacy", q, page, page_size), SEARCH_TTL, "Open Food Facts") or {}
-        products, page_count = data.get("products") or [], data.get("page_count") or 0
-    items = [x for x in (off_normalize(p) for p in products) if x]
+        if mexico:
+            legacy |= {"tagtype_0": "countries", "tag_contains_0": "contains", "tag_0": "mexico"}
+        data = _get(OFF_LEGACY_SEARCH, legacy, _key("off-legacy", q, mexico, page, page_size), SEARCH_TTL, "Open Food Facts") or {}
+        return data.get("products") or [], data.get("page_count") or 0
+
+
+def off_search(q: str, page: int = 1, page_size: int = 15) -> dict:
+    """Productos de México primero, luego los del resto del mundo (sin repetir).
+    Sin el filtro, el buscador global devuelve casi solo productos de EE. UU."""
+    products, has_more, errors = [], False, []
+    for mexico in (True, False):
+        try:
+            found, page_count = _off_query(q, page, page_size, mexico)
+        except ServiceError as e:
+            errors.append(e)
+            continue
+        products += found
+        has_more = has_more or page < page_count
+    if len(errors) == 2:
+        raise errors[0]
+    seen, items = set(), []
+    for p in products:
+        it = off_normalize(p)
+        if it and it["external_id"] not in seen:
+            seen.add(it["external_id"])
+            items.append(it)
     for it in items:
         remember(it)
-    return {"items": items, "has_more": page < page_count}
+    return {"items": items, "has_more": has_more}
 
 
 def off_barcode(code: str) -> dict | None:
@@ -353,8 +378,9 @@ def _dedupe_key(it: dict) -> str:
 
 
 def search(q: str, source: str = "all", page: int = 1) -> dict:
-    """Combina fuentes. Prioridad: mejores genéricos de USDA, productos mexicanos de OFF,
-    resto de USDA, resto de OFF. Quita duplicados (mismo código o mismo nombre+marca)."""
+    """Combina fuentes. Prioridad: productos mexicanos de OFF, luego USDA (genéricos), luego el
+    resto de OFF. Si se busca un alimento básico ("huevo", "arroz"), sus 2 mejores genéricos de USDA
+    van antes. Quita duplicados (mismo código o mismo nombre+marca)."""
     q = (q or "").strip()
     if len(q) < 2:
         raise ServiceError("Escribe al menos 2 letras.")
@@ -372,7 +398,9 @@ def search(q: str, source: str = "all", page: int = 1) -> dict:
     if source == "all":
         mx = [i for i in off["items"] if i["is_mexican"]]
         rest = [i for i in off["items"] if not i["is_mexican"]]
-        ordered = usda["items"][:3] + mx + usda["items"][3:] + rest
+        basic = strip_accents(q.lower()) in ES_EN
+        lead = usda["items"][:2] if basic else []
+        ordered = lead + mx + usda["items"][len(lead):] + rest
     else:
         ordered = usda["items"] + sorted(off["items"], key=lambda i: not i["is_mexican"])
     seen, out = set(), []

@@ -35,9 +35,9 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", api.urls),
 ]
-if settings.DEBUG:
+if settings.DEBUG and not settings.MEDIA_IN_DB:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:
-    # En producción: solo con sesión iniciada (y en Railway, desde el volumen montado en MEDIA_ROOT).
+    # Producción: fotos guardadas en la base de datos, solo con sesión iniciada.
     urlpatterns += [re_path(r"^media/(?P<path>.+)$", serve_media)]
 urlpatterns += [re_path(r"^(?!api/|admin/|static/|media/).*$", spa)]
