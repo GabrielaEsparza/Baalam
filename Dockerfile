@@ -2,7 +2,9 @@
 FROM node:24-alpine AS web
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+# npm ci es reproducible, pero npm a veces omite dependencias de paquetes opcionales (wasm) en el
+# lockfile generado en Windows; si pasa, npm install respeta las versiones del lockfile y completa lo que falta.
+RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 COPY frontend/ ./
 RUN npx vite build
 
