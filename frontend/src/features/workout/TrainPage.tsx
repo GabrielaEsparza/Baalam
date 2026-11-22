@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get as idbGet, set as idbSet } from "idb-keyval";
-import { ArrowLeftRight, Check, ChevronDown, CloudOff, Dumbbell, Flag, Repeat, RotateCcw, Timer, Trophy, X } from "lucide-react";
+import { ArrowLeftRight, Check, ChevronDown, CloudOff, Dumbbell, Flag, Flame, Repeat, RotateCcw, Timer, Trophy, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { api, unwrap, ApiError } from "@/api/client";
 import type { FinishResult, SwapOption, TodayItem, TodayWorkoutFull } from "@/api/types";
@@ -326,6 +326,19 @@ export default function TrainPage() {
               <Stat label="Volumen" value={`${Math.round(Number(summary.volume_kg))} kg`} />
               <Stat label="PRs" value={String(summary.prs)} />
             </div>
+            {summary.kcal_estimate > 0 && (
+              <div className="rounded-card bg-surface-2 p-3 text-left">
+                <p className="flex items-center gap-2">
+                  <Flame className="size-6 shrink-0 text-fire" />
+                  <span className="text-2xl font-extrabold tabular-nums">≈ {summary.kcal_estimate} kcal</span>
+                  <span className="text-sm text-ink-2">quemadas</span>
+                </p>
+                <p className="mt-1 text-xs text-ink-2">
+                  Estimación con tu peso ({summary.kcal_weight_assumed ? "70 kg de referencia: registra el tuyo en Mi progreso" : `${summary.kcal_weight_kg} kg`}) y
+                  el tiempo de entrenamiento. Es un cálculo conservador, a propósito un poco abajo: no lo uses para comer de más.
+                </p>
+              </div>
+            )}
             {summary.points > 0 ? (
               <p className="inline-block rounded-full bg-gold px-5 py-2 text-xl font-extrabold text-night">+{summary.points} puntos</p>
             ) : (

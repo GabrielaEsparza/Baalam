@@ -473,6 +473,48 @@ def log_set(member, *, item_id: int, set_number: int, weight_kg=None, reps=None,
     return {"set_number": set_number, "done": log.done, "is_pr": is_pr, "points": points}
 
 
+# ---------------- Calorías estimadas ----------------
+# kcal = MET × peso (kg) × horas (Compendio de Actividades Físicas, Ainsworth/Herrmann 2024).
+# Pesas: 3.5 (con descansos largos), 5.0 (moderado), 6.0 (poco descanso / circuito).
+KCAL_FACTOR = 0.7  # se muestra 30 % abajo del promedio a propósito, para no invitar a comer de más
+DEFAULT_WEIGHT_KG = 70
+WORK_S_PER_SET = 40  # tiempo típico de una serie por repeticiones
+
+
+def _latest_weight(member) -> Decimal | None:
+    from apps.progress.models import BodyLog
+
+    return (
+        BodyLog.objects.filter(member=member, weight_kg__isnull=False).order_by("-date").values_list("weight_kg", flat=True).first()
+    )
+
+
+def estimate_kcal(member, items: list, done_sets: list, real_minutes: float) -> dict:
+    """Estimación conservadora de calorías del entrenamiento. `items` son los del día."""
+    by_ex = {i.exercise_id: i for i in items}
+    done = [by_ex[s.exercise_id] for s in done_sets if s.exercise_id in by_ex]
+    if not done:
+        return {"kcal": 0, "met": 0, "weight_kg": None, "weight_assumed": False}
+    work_s = sum(i.duration_s or WORK_S_PER_SET for i in done)
+    # En alternados no se descansa entre ejercicios: solo al final de la ronda (último del grupo).
+    ordered = sorted(items, key=lambda i: (i.order, i.id))
+    mid_group = {
+        a.exercise_id for a, nxt in zip(ordered, ordered[1:]) if a.superset_group and a.superset_group == nxt.superset_group
+    }
+    rest_s = sum(0 if i.exercise_id in mid_group else i.rest_s for i in done)
+    planned_min = (work_s + rest_s) / 60
+    # Tiempo real, pero dentro de lo razonable para las series hechas (marcar todo al final
+    # o terminar horas después no debe disparar el número).
+    minutes = min(max(real_minutes, planned_min * 0.6), planned_min * 1.5, 150)
+    avg_rest = rest_s / len(done)
+    supersets = sum(1 for i in done if i.superset_group) / len(done)
+    met = 6.0 if avg_rest <= 30 or supersets >= 0.5 else 5.0 if avg_rest <= 75 else 3.5
+    w = _latest_weight(member)
+    weight = float(w) if w else DEFAULT_WEIGHT_KG
+    kcal = met * weight * (minutes / 60) * KCAL_FACTOR
+    return {"kcal": int(round(kcal / 5) * 5), "met": met, "weight_kg": weight, "weight_assumed": not w}
+
+
 @transaction.atomic
 def finish_session(member) -> dict:
     day = _today_day(member)
@@ -494,8 +536,13 @@ def finish_session(member) -> dict:
     pts += sum(
         PointsLedger.objects.filter(member=member, ref__startswith=f"pr:{session.id}:").values_list("points", flat=True)
     )
+    real_min = (session.finished_at - session.started_at).total_seconds() / 60
+    kcal = estimate_kcal(member, list(day.items.all()), done_sets, real_min)
     return {
-        "duration_min": max(1, round((session.finished_at - session.started_at).total_seconds() / 60)),
+        "kcal_estimate": kcal["kcal"],
+        "kcal_weight_kg": kcal["weight_kg"],
+        "kcal_weight_assumed": kcal["weight_assumed"],
+        "duration_min": max(1, round(real_min)),
         "sets_done": len(done_sets),
         "sets_planned": planned,
         "volume_kg": volume,

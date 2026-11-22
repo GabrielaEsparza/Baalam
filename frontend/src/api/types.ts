@@ -197,6 +197,10 @@ export interface TodayWorkoutFull {
   session: { id: number; started_at: string; finished_at: string | null } | null;
 }
 export interface FinishResult {
+  /** Estimación conservadora (30 % abajo del promedio), redondeada a 5. */
+  kcal_estimate: number;
+  kcal_weight_kg: number | null;
+  kcal_weight_assumed: boolean;
   duration_min: number;
   sets_done: number;
   sets_planned: number;
