@@ -6721,7 +6721,7 @@
      "duration_s": {
       "anyOf": [
        {
-        "maximum": 3600,
+        "maximum": 7200,
         "minimum": 5,
         "type": "integer"
        },

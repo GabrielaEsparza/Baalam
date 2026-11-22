@@ -6,7 +6,7 @@ import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { Button, Field, Input, Sheet, Stepper, Switch, Tabs } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { tr, trList } from "@/lib/exercise-i18n";
-import { fmtReps } from "@/lib/format";
+import { fmtDuration, fmtReps } from "@/lib/format";
 
 /** Lo que el coach configura por ejercicio. */
 export interface ItemDraft {
@@ -42,7 +42,7 @@ export function itemSummary(i: {
   target_weight_kg: string | null;
   rest_s: number;
 }) {
-  const work = i.duration_s ? `${i.sets} × ${i.duration_s} s` : `${i.sets} × ${fmtReps(i.reps, i.reps_max)}`;
+  const work = i.duration_s ? `${i.sets} × ${fmtDuration(i.duration_s)}` : `${i.sets} × ${fmtReps(i.reps, i.reps_max)}`;
   const kg = i.target_weight_kg && Number(i.target_weight_kg) > 0 ? ` · ${Number(i.target_weight_kg)} kg` : "";
   return `${work}${kg} · descanso ${i.rest_s} s`;
 }
@@ -96,7 +96,29 @@ export function ItemSheet({
           ]}
         />
         {timed ? (
-          <Stepper value={d.duration_s ?? 30} min={5} max={600} step={5} suffix="s" onChange={(v) => set({ duration_s: v })} />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="t-label mb-1">Minutos</p>
+              <Stepper
+                value={Math.floor((d.duration_s ?? 30) / 60)}
+                min={0}
+                max={120}
+                label="Minutos"
+                onChange={(m) => set({ duration_s: Math.max(5, Math.min(7200, m * 60 + ((d.duration_s ?? 30) % 60))) })}
+              />
+            </div>
+            <div>
+              <p className="t-label mb-1">Segundos</p>
+              <Stepper
+                value={(d.duration_s ?? 30) % 60}
+                min={0}
+                max={55}
+                step={5}
+                label="Segundos"
+                onChange={(s) => set({ duration_s: Math.max(5, Math.floor((d.duration_s ?? 30) / 60) * 60 + s) })}
+              />
+            </div>
+          </div>
         ) : (
           <div className="space-y-2">
             <Switch

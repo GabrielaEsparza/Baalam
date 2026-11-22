@@ -477,7 +477,6 @@ def log_set(member, *, item_id: int, set_number: int, weight_kg=None, reps=None,
 # kcal = MET × peso (kg) × horas (Compendio de Actividades Físicas, Ainsworth/Herrmann 2024).
 # Pesas: 3.5 (con descansos largos), 5.0 (moderado), 6.0 (poco descanso / circuito).
 KCAL_FACTOR = 0.7  # se muestra 30 % abajo del promedio a propósito, para no invitar a comer de más
-DEFAULT_WEIGHT_KG = 70
 WORK_S_PER_SET = 40  # tiempo típico de una serie por repeticiones
 
 
@@ -489,30 +488,73 @@ def _latest_weight(member) -> Decimal | None:
     )
 
 
+# Cardio dentro de la rutina (bici fija, caminadora…): MET propio según el tipo de ejercicio.
+# Se busca en equipo, grupo y nombre (inglés del catálogo y español de los ejercicios propios).
+CARDIO_METS = [
+    (("spinning", "spin "), 8.5),
+    (("stepmill", "escaladora", "stair"), 9.0),
+    (("jump rope", "cuerda", "saltar"), 10.0),
+    (("correr", "trotar", " run", "running", "sprint"), 8.0),
+    (("stationary bike", "bici", "bicicleta", "cycling", "bike"), 7.0),
+    (("rowing machine", "ergómetro", "ergometro", "máquina de remo", "maquina de remo", "skierg"), 7.0),
+    (("treadmill", "caminadora", "cinta"), 6.0),
+    (("elliptical", "elíptica", "eliptica"), 5.0),
+    (("burpee", "jumping jack", "mountain climber", "escalador", "saltos", "jump"), 8.0),
+]
+CARDIO_DEFAULT_MET = 7.0
+
+
+def cardio_met(ex) -> float | None:
+    """MET del ejercicio si es cardio; None si es de fuerza."""
+    text = f" {ex.equipment} {ex.muscle_group} {ex.name_es} {ex.name_en} ".lower()
+    for words, met in CARDIO_METS:
+        if any(w in text for w in words):
+            return met
+    return CARDIO_DEFAULT_MET if "cardio" in (ex.muscle_group or "").lower() else None
+
+
 def estimate_kcal(member, items: list, done_sets: list, real_minutes: float) -> dict:
-    """Estimación conservadora de calorías del entrenamiento. `items` son los del día."""
+    """Estimación conservadora de calorías del entrenamiento. `items` son los del día.
+    Sin peso registrado no se calcula (devuelve 0)."""
+    w = _latest_weight(member)
     by_ex = {i.exercise_id: i for i in items}
-    done = [by_ex[s.exercise_id] for s in done_sets if s.exercise_id in by_ex]
-    if not done:
-        return {"kcal": 0, "met": 0, "weight_kg": None, "weight_assumed": False}
-    work_s = sum(i.duration_s or WORK_S_PER_SET for i in done)
+    done = [(by_ex[s.exercise_id], s) for s in done_sets if s.exercise_id in by_ex]
+    if not w or not done:
+        return {"kcal": 0, "met": 0, "weight_kg": float(w) if w else None}
+    weight = float(w)
+
     # En alternados no se descansa entre ejercicios: solo al final de la ronda (último del grupo).
     ordered = sorted(items, key=lambda i: (i.order, i.id))
     mid_group = {
         a.exercise_id for a, nxt in zip(ordered, ordered[1:]) if a.superset_group and a.superset_group == nxt.superset_group
     }
-    rest_s = sum(0 if i.exercise_id in mid_group else i.rest_s for i in done)
-    planned_min = (work_s + rest_s) / 60
-    # Tiempo real, pero dentro de lo razonable para las series hechas (marcar todo al final
-    # o terminar horas después no debe disparar el número).
-    minutes = min(max(real_minutes, planned_min * 0.6), planned_min * 1.5, 150)
-    avg_rest = rest_s / len(done)
-    supersets = sum(1 for i in done if i.superset_group) / len(done)
-    met = 6.0 if avg_rest <= 30 or supersets >= 0.5 else 5.0 if avg_rest <= 75 else 3.5
-    w = _latest_weight(member)
-    weight = float(w) if w else DEFAULT_WEIGHT_KG
-    kcal = met * weight * (minutes / 60) * KCAL_FACTOR
-    return {"kcal": int(round(kcal / 5) * 5), "met": met, "weight_kg": weight, "weight_assumed": not w}
+
+    # Cardio: su tiempo real (lo que anotó en la serie, o lo planeado) × su MET.
+    cardio_kcal_h, cardio_s, strength = 0.0, 0, []
+    for i, log in done:
+        met = cardio_met(i.exercise)
+        if met:
+            secs = min((log.reps if i.duration_s and log.reps else None) or i.duration_s or WORK_S_PER_SET, 3 * 3600)
+            cardio_kcal_h += met * secs / 3600
+            cardio_s += secs
+        else:
+            strength.append(i)
+
+    strength_kcal_h, met = 0.0, 0.0
+    if strength:
+        work_s = sum(i.duration_s or WORK_S_PER_SET for i in strength)
+        rest_s = sum(0 if i.exercise_id in mid_group else i.rest_s for i in strength)
+        planned_min = (work_s + rest_s) / 60
+        # Tiempo real, pero dentro de lo razonable para las series hechas (marcar todo al final
+        # o terminar horas después no debe disparar el número).
+        minutes = min(max(real_minutes - cardio_s / 60, planned_min * 0.6), planned_min * 1.5, 150)
+        avg_rest = rest_s / len(strength)
+        supersets = sum(1 for i in strength if i.superset_group) / len(strength)
+        met = 6.0 if avg_rest <= 30 or supersets >= 0.5 else 5.0 if avg_rest <= 75 else 3.5
+        strength_kcal_h = met * minutes / 60
+
+    kcal = (strength_kcal_h + cardio_kcal_h) * weight * KCAL_FACTOR
+    return {"kcal": int(round(kcal / 5) * 5), "met": met, "weight_kg": weight}
 
 
 @transaction.atomic
@@ -537,11 +579,10 @@ def finish_session(member) -> dict:
         PointsLedger.objects.filter(member=member, ref__startswith=f"pr:{session.id}:").values_list("points", flat=True)
     )
     real_min = (session.finished_at - session.started_at).total_seconds() / 60
-    kcal = estimate_kcal(member, list(day.items.all()), done_sets, real_min)
+    kcal = estimate_kcal(member, list(day.items.select_related("exercise")), done_sets, real_min)
     return {
         "kcal_estimate": kcal["kcal"],
         "kcal_weight_kg": kcal["weight_kg"],
-        "kcal_weight_assumed": kcal["weight_assumed"],
         "duration_min": max(1, round(real_min)),
         "sets_done": len(done_sets),
         "sets_planned": planned,

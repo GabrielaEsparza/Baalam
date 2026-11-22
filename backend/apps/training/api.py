@@ -23,7 +23,7 @@ class ItemIn(Schema):
     sets: int = Field(3, ge=1, le=20)
     reps: int | None = Field(None, ge=1, le=200)
     reps_max: int | None = Field(None, ge=1, le=200)
-    duration_s: int | None = Field(None, ge=5, le=3600)
+    duration_s: int | None = Field(None, ge=5, le=7200)
     target_weight_kg: Decimal | None = Field(None, ge=0, le=500)
     rest_s: int = Field(90, ge=0, le=900)
     superset_group: str = Field("", max_length=4)

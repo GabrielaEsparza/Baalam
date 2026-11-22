@@ -37,3 +37,12 @@ export const methodLabel: Record<string, string> = { cash: "Efectivo", transfer:
 /** Repeticiones: "8–10" si hay rango; si no, el número. */
 export const fmtReps = (reps: number | null | undefined, max?: number | null) =>
   reps == null ? "—" : max && max > reps ? `${reps}–${max}` : String(reps);
+
+/** Duración legible: "45 s", "50 min", "1 min 30 s". */
+export function fmtDuration(seconds: number | null | undefined) {
+  if (!seconds) return "—";
+  if (seconds < 60) return `${seconds} s`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return s ? `${m} min ${s} s` : `${m} min`;
+}

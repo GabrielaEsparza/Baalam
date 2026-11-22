@@ -9,7 +9,7 @@ import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { Button, Card, EmptyState, ErrorBox, PageTitle, Sheet, Spinner, cx } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { trList } from "@/lib/exercise-i18n";
-import { WD_SHORT, fmtReps } from "@/lib/format";
+import { WD_SHORT, fmtDuration, fmtReps } from "@/lib/format";
 
 const KEY = ["workout-today"];
 const QUEUE = "baalam-set-queue";
@@ -26,7 +26,9 @@ function toBlocks(items: TodayItem[]): TodayItem[][] {
   return out;
 }
 const doneSets = (it: TodayItem) => it.logged.filter((l) => l.done).length;
-const workLabel = (it: TodayItem) => (it.duration_s ? `${it.duration_s} s` : `${fmtReps(it.reps, it.reps_max)} reps`);
+const workLabel = (it: TodayItem) => (it.duration_s ? fmtDuration(it.duration_s) : `${fmtReps(it.reps, it.reps_max)} reps`);
+/** Ejercicios largos por tiempo (bici, caminadora): se anotan en minutos, no en segundos. */
+const inMinutes = (it: TodayItem) => !!it.duration_s && it.duration_s >= 120;
 
 /* ---------- Cola sin conexión: las series se guardan local y se reenvían con señal ---------- */
 async function enqueue(b: SetBody) {
@@ -333,9 +335,6 @@ export default function TrainPage() {
                   <span className="text-2xl font-extrabold tabular-nums">≈ {summary.kcal_estimate} kcal</span>
                   <span className="text-sm text-ink-2">quemadas</span>
                 </p>
-                {summary.kcal_weight_assumed && (
-                  <p className="mt-1 text-xs text-ink-2">Calculado con 70 kg. Registra tu peso en Mi progreso para que sea el tuyo.</p>
-                )}
               </div>
             )}
             {summary.points > 0 ? (
@@ -514,7 +513,7 @@ function ExerciseCard({
             <div className="grid grid-cols-[48px_1fr_1fr_56px] gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-2">
               <span>Serie</span>
               <span className="text-center">Kg</span>
-              <span className="text-center">{item.duration_s ? "Seg" : "Reps"}</span>
+              <span className="text-center">{inMinutes(item) ? "Min" : item.duration_s ? "Seg" : "Reps"}</span>
               <span />
             </div>
             {Array.from({ length: item.sets }, (_, k) => k + 1).map((n) => (
@@ -709,7 +708,9 @@ function SetRow({
   const [kg, setKg] = useState(logged?.weight_kg != null ? String(Number(logged.weight_kg)) : suggested ? String(Number(suggested)) : "");
   // Con rango (8–10) no se pre-llena: cada quien escribe cuántas hizo.
   const ranged = !item.duration_s && item.reps_max != null;
-  const [reps, setReps] = useState(String(logged?.reps ?? (ranged ? "" : (item.reps ?? item.duration_s ?? ""))));
+  const mins = inMinutes(item);
+  const initial = logged?.reps ?? (ranged ? null : (item.reps ?? item.duration_s ?? null));
+  const [reps, setReps] = useState(initial == null ? "" : String(mins ? Math.round(initial / 60) : initial));
   const done = !!logged?.done;
   // Si la serie anterior cambió de peso, las siguientes sin registrar lo heredan.
   const prev = useRef(suggested);
@@ -725,7 +726,7 @@ function SetRow({
       item_id: item.id,
       set_number: n,
       weight_kg: kg ? kg.replace(",", ".") : null,
-      reps: reps ? Number(reps) : null,
+      reps: reps ? (mins ? Number(reps) * 60 : Number(reps)) : null,
       done: !done,
     });
 
