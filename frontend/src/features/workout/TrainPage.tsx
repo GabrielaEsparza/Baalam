@@ -333,10 +333,9 @@ export default function TrainPage() {
                   <span className="text-2xl font-extrabold tabular-nums">≈ {summary.kcal_estimate} kcal</span>
                   <span className="text-sm text-ink-2">quemadas</span>
                 </p>
-                <p className="mt-1 text-xs text-ink-2">
-                  Estimación con tu peso ({summary.kcal_weight_assumed ? "70 kg de referencia: registra el tuyo en Mi progreso" : `${summary.kcal_weight_kg} kg`}) y
-                  el tiempo de entrenamiento. Es un cálculo conservador, a propósito un poco abajo: no lo uses para comer de más.
-                </p>
+                {summary.kcal_weight_assumed && (
+                  <p className="mt-1 text-xs text-ink-2">Calculado con 70 kg. Registra tu peso en Mi progreso para que sea el tuyo.</p>
+                )}
               </div>
             )}
             {summary.points > 0 ? (
