@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BellOff, Share } from "lucide-react";
+import { Bell, BellOff, ChevronDown, Share } from "lucide-react";
 import { api, unwrap } from "@/api/client";
-import { Button, Card, Stepper, Switch } from "@/components/ui";
+import { Button, Card, Stepper, Switch, cx } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { currentSubscription, disablePush, enablePush, isIOS, isStandalone, pushSupported } from "@/lib/push";
 
@@ -16,11 +16,22 @@ type Prefs = {
   measures: boolean;
   devices: number;
 };
+type Draft = Pick<Prefs, "water" | "water_goal_ml" | "workout" | "workout_hour" | "classes" | "measures">;
 const KEY = ["me", "reminders"];
 const HOURS = Array.from({ length: 18 }, (_, i) => i + 5); // 5 a 22 h
 const fmtHour = (h: number) => `${h % 12 || 12}:00 ${h < 12 ? "am" : "pm"}`;
+const toDraft = (p: Prefs): Draft => ({
+  water: p.water,
+  water_goal_ml: p.water_goal_ml,
+  workout: p.workout,
+  workout_hour: p.workout_hour,
+  classes: p.classes,
+  measures: p.measures,
+});
+const sameDraft = (a: Draft, b: Draft) => (Object.keys(a) as (keyof Draft)[]).every((k) => a[k] === b[k]);
 
-/** Perfil → Avisos: activar notificaciones en este celular y elegir cuáles recibir. */
+/** Perfil → Avisos (desplegable): activar notificaciones en este celular y elegir cuáles recibir.
+ *  Las preferencias se guardan con "Guardar cambios", que cierra el desplegable. */
 export function RemindersCard() {
   const qc = useQueryClient();
   const toast = useToast();
@@ -28,6 +39,8 @@ export function RemindersCard() {
     queryKey: KEY,
     queryFn: async () => (await unwrap(api.GET("/api/me/reminders"))) as unknown as Prefs,
   });
+  const [open, setOpen] = useState(() => window.location.hash === "#avisos");
+  const [draft, setDraft] = useState<Draft | null>(null);
   const [on, setOn] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const supported = pushSupported();
@@ -40,18 +53,30 @@ export function RemindersCard() {
       .catch(() => setOn(false));
   }, []);
 
+  // Al abrir, el borrador parte de lo guardado; al cerrar sin guardar, se descarta.
+  // (Si los datos se recargan con el desplegable abierto, no se pisan los cambios.)
+  useEffect(() => {
+    if (!open) setDraft(null);
+    else if (p && !draft) setDraft(toDraft(p));
+  }, [open, p, draft]);
+
+  // Si llegó desde "Cambiar meta o avisos de agua" (#avisos), bajar hasta aquí.
+  useEffect(() => {
+    if (p && window.location.hash === "#avisos") document.getElementById("avisos")?.scrollIntoView({ behavior: "smooth" });
+  }, [p]);
+
   const save = useMutation({
-    mutationFn: async (body: Partial<Prefs> & { water_goal_auto?: boolean }) =>
-      (await unwrap(api.PUT("/api/me/reminders", { body: body as never }))) as unknown as Prefs,
-    onMutate: (body) => qc.setQueryData<Prefs>(KEY, (old) => (old ? { ...old, ...body } : old)),
+    mutationFn: async (d: Draft) => {
+      const body = { ...d, water_goal_auto: d.water_goal_ml == null };
+      return (await unwrap(api.PUT("/api/me/reminders", { body: body as never }))) as unknown as Prefs;
+    },
     onSuccess: (r) => {
       qc.setQueryData(KEY, r);
       qc.invalidateQueries({ queryKey: ["home"] });
+      toast("Avisos guardados");
+      setOpen(false);
     },
-    onError: (e) => {
-      toast((e as Error).message, "error");
-      qc.invalidateQueries({ queryKey: KEY });
-    },
+    onError: (e) => toast((e as Error).message, "error"),
   });
 
   async function toggle() {
@@ -71,7 +96,6 @@ export function RemindersCard() {
           toast("No diste permiso para avisos. Puedes activarlo en los ajustes del celular.", "error");
         }
       }
-      qc.invalidateQueries({ queryKey: KEY });
     } catch (e) {
       toast((e as Error).message, "error");
     } finally {
@@ -79,107 +103,126 @@ export function RemindersCard() {
     }
   }
 
-  // Si llegó desde "Cambiar meta o avisos de agua" (#avisos), bajar hasta aquí.
-  useEffect(() => {
-    if (p && window.location.hash === "#avisos") document.getElementById("avisos")?.scrollIntoView({ behavior: "smooth" });
-  }, [p]);
-
   if (!p) return null;
-  const goal = p.water_goal_ml ?? p.water_goal_auto_ml;
+  const d = draft ?? toDraft(p);
+  const set = (patch: Partial<Draft>) => setDraft({ ...d, ...patch });
+  const dirty = !sameDraft(d, toDraft(p));
+  const goal = d.water_goal_ml ?? p.water_goal_auto_ml;
+  const activeCount = [p.water, p.workout, p.classes, p.measures].filter(Boolean).length;
+  const summary = on ? `Activados en este celular · ${activeCount} de 4 avisos` : "Desactivados en este celular";
 
   return (
-    <Card className="scroll-mt-20 space-y-4" id="avisos">
-      {iosBrowser ? (
-        <div className="space-y-2 rounded-input bg-surface-2 p-3 text-[15px]">
-          <p className="font-semibold">Para recibir avisos en iPhone, instala la app:</p>
-          <ol className="list-decimal space-y-1 pl-5 text-ink-2">
-            <li>
-              Toca <Share className="inline size-4 align-text-bottom" /> <b>Compartir</b> en Safari.
-            </li>
-            <li>
-              Elige <b>“Agregar a pantalla de inicio”</b>.
-            </li>
-            <li>Abre BÁALAM desde el ícono y vuelve aquí.</li>
-          </ol>
-        </div>
-      ) : !supported ? (
-        <p className="text-[15px] text-ink-2">Este navegador no permite avisos. Prueba con Chrome o instala la app.</p>
-      ) : denied ? (
-        <p className="text-[15px] text-ink-2">
-          Bloqueaste los avisos para BÁALAM. Actívalos en los ajustes del celular (Notificaciones) y regresa aquí.
-        </p>
-      ) : (
-        <Button
-          full
-          variant={on ? "secondary" : "primary"}
-          icon={on ? BellOff : Bell}
-          loading={busy || on === null}
-          onClick={toggle}
-        >
-          {on ? "Desactivar avisos en este celular" : "Activar avisos en este celular"}
-        </Button>
-      )}
-
-      <div className="divide-y divide-line">
-        <Switch label="💧 Tomar agua (cada 2 horas)" checked={p.water} onChange={(v) => save.mutate({ water: v })} />
-        <Switch
-          label="🏋️ Si no has registrado tu entrenamiento"
-          checked={p.workout}
-          onChange={(v) => save.mutate({ workout: v })}
-        />
-        {p.workout && (
-          <label className="flex min-h-12 items-center justify-between gap-4 pb-2">
-            <span className="text-[15px] text-ink-2">Avisarme a las</span>
-            <select
-              value={p.workout_hour}
-              onChange={(e) => save.mutate({ workout_hour: Number(e.target.value) })}
-              className="h-11 rounded-input border border-line bg-surface-2 px-3 font-semibold focus:border-orchid focus:outline-none"
-            >
-              {HOURS.map((h) => (
-                <option key={h} value={h}>
-                  {fmtHour(h)}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        <Switch
-          label="📅 1 hora antes de mi sesión reservada"
-          checked={p.classes}
-          onChange={(v) => save.mutate({ classes: v })}
-        />
-        <Switch
-          label="📏 Cada mes, actualizar peso y medidas"
-          checked={p.measures}
-          onChange={(v) => save.mutate({ measures: v })}
-        />
-      </div>
-
-      <div>
-        <p className="t-label mb-1.5">Meta de agua al día</p>
-        <Stepper
-          value={goal}
-          min={500}
-          max={6000}
-          step={250}
-          suffix="ml"
-          label="Meta de agua en ml"
-          onChange={(v) => save.mutate({ water_goal_ml: v })}
-        />
-        <p className="mt-1 text-sm text-ink-2">
-          {p.water_goal_ml == null ? (
-            "Automática: 35 ml por kg de tu último peso registrado (2 L si no lo has registrado)."
-          ) : (
-            <button
-              type="button"
-              className="font-semibold text-orchid hover:underline"
-              onClick={() => save.mutate({ water_goal_auto: true })}
-            >
-              Usar la meta automática ({p.water_goal_auto_ml.toLocaleString("es-MX")} ml)
-            </button>
+    <Card className="mt-6 scroll-mt-20 p-0" id="avisos">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 p-4 text-left"
+      >
+        <span
+          className={cx(
+            "grid size-11 shrink-0 place-items-center rounded-full",
+            on ? "bg-orchid/15 text-orchid" : "bg-surface-2 text-ink-2",
           )}
-        </p>
-      </div>
+        >
+          {on ? <Bell className="size-5" /> : <BellOff className="size-5" />}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="t-h2 block text-orchid">Avisos</span>
+          <span className="block text-sm text-ink-2">{on === null ? "…" : summary}</span>
+        </span>
+        <ChevronDown className={cx("size-5 shrink-0 text-ink-2 transition", open && "rotate-180")} />
+      </button>
+
+      {open && (
+        <div className="space-y-4 border-t border-line p-4">
+          {iosBrowser ? (
+            <div className="space-y-2 rounded-input bg-surface-2 p-3 text-[15px]">
+              <p className="font-semibold">Para recibir avisos en iPhone, instala la app:</p>
+              <ol className="list-decimal space-y-1 pl-5 text-ink-2">
+                <li>
+                  Toca <Share className="inline size-4 align-text-bottom" /> <b>Compartir</b> en Safari.
+                </li>
+                <li>
+                  Elige <b>“Agregar a pantalla de inicio”</b>.
+                </li>
+                <li>Abre BÁALAM desde el ícono y vuelve aquí.</li>
+              </ol>
+            </div>
+          ) : !supported ? (
+            <p className="text-[15px] text-ink-2">Este navegador no permite avisos. Prueba con Chrome o instala la app.</p>
+          ) : denied ? (
+            <p className="text-[15px] text-ink-2">
+              Bloqueaste los avisos para BÁALAM. Actívalos en los ajustes del celular (Notificaciones) y regresa aquí.
+            </p>
+          ) : (
+            <Button
+              full
+              variant={on ? "secondary" : "primary"}
+              icon={on ? BellOff : Bell}
+              loading={busy || on === null}
+              onClick={toggle}
+            >
+              {on ? "Desactivar avisos en este celular" : "Activar avisos en este celular"}
+            </Button>
+          )}
+
+          <div className="divide-y divide-line">
+            <Switch label="💧 Tomar agua (cada 2 horas)" checked={d.water} onChange={(v) => set({ water: v })} />
+            <Switch label="🏋️ Si no has registrado tu entrenamiento" checked={d.workout} onChange={(v) => set({ workout: v })} />
+            {d.workout && (
+              <label className="flex min-h-12 items-center justify-between gap-4 pb-2">
+                <span className="text-[15px] text-ink-2">Avisarme a las</span>
+                <select
+                  value={d.workout_hour}
+                  onChange={(e) => set({ workout_hour: Number(e.target.value) })}
+                  className="h-11 rounded-input border border-line bg-surface-2 px-3 font-semibold focus:border-orchid focus:outline-none"
+                >
+                  {HOURS.map((h) => (
+                    <option key={h} value={h}>
+                      {fmtHour(h)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <Switch label="📅 1 hora antes de mi sesión reservada" checked={d.classes} onChange={(v) => set({ classes: v })} />
+            <Switch label="📏 Cada mes, actualizar peso y medidas" checked={d.measures} onChange={(v) => set({ measures: v })} />
+          </div>
+
+          <div>
+            <p className="t-label mb-1.5">Meta de agua al día</p>
+            <Stepper
+              value={goal}
+              min={500}
+              max={6000}
+              step={250}
+              suffix="ml"
+              label="Meta de agua en ml"
+              onChange={(v) => set({ water_goal_ml: v })}
+            />
+            <p className="mt-1 text-sm text-ink-2">
+              {d.water_goal_ml == null ? (
+                "Automática: 35 ml por kg de tu último peso registrado (2 L si no lo has registrado)."
+              ) : (
+                <button
+                  type="button"
+                  className="font-semibold text-orchid hover:underline"
+                  onClick={() => set({ water_goal_ml: null })}
+                >
+                  Usar la meta automática ({p.water_goal_auto_ml.toLocaleString("es-MX")} ml)
+                </button>
+              )}
+            </p>
+          </div>
+
+          {dirty && (
+            <Button full loading={save.isPending} onClick={() => save.mutate(d)}>
+              Guardar cambios
+            </Button>
+          )}
+        </div>
+      )}
     </Card>
   );
 }

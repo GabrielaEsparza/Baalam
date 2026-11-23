@@ -194,12 +194,7 @@ export default function ProfilePage() {
         )}
       </Card>
 
-      {!me.features.coach && me.features.access && (
-        <>
-          <SectionTitle>Avisos</SectionTitle>
-          <RemindersCard />
-        </>
-      )}
+      {!me.features.coach && me.features.access && <RemindersCard />}
 
       <Button variant="danger" full className="mt-6" onClick={logout}>
         Cerrar sesión
