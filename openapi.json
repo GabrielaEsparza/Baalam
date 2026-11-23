@@ -4235,6 +4235,16 @@
      "admin": {
       "title": "Admin",
       "type": "boolean"
+     },
+     "self_routine": {
+      "default": false,
+      "title": "Self Routine",
+      "type": "boolean"
+     },
+     "owner": {
+      "default": false,
+      "title": "Owner",
+      "type": "boolean"
      }
     },
     "required": [
@@ -6695,6 +6705,11 @@
       "title": "Includes Routine",
       "type": "boolean"
      },
+     "self_routine": {
+      "default": false,
+      "title": "Self Routine",
+      "type": "boolean"
+     },
      "payments": {
       "items": {
        "additionalProperties": true,
@@ -6788,6 +6803,17 @@
        }
       ],
       "title": "Role"
+     },
+     "self_routine": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Self Routine"
      }
     },
     "title": "MemberPatch",

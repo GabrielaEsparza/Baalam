@@ -76,7 +76,16 @@ export function useEnsureInLibrary() {
  * - "Mi biblioteca": los que ya usaste o importaste (lo que leen los miembros).
  * `onPick` se llama con un ejercicio YA guardado en la biblioteca (con id propio).
  */
-export function ExerciseLibrary({ onPick, pickLabel = "Agregar" }: { onPick: (ex: Exercise) => void; pickLabel?: string }) {
+/** `coach=false`: el miembro que arma su propia rutina (busca y agrega, pero no crea ni edita ejercicios del gym). */
+export function ExerciseLibrary({
+  onPick,
+  pickLabel = "Agregar",
+  coach = true,
+}: {
+  onPick: (ex: Exercise) => void;
+  pickLabel?: string;
+  coach?: boolean;
+}) {
   const toast = useToast();
   const [source, setSource] = useState<Source>("catalog");
   const [q, setQ] = useState("");
@@ -148,12 +157,14 @@ export function ExerciseLibrary({ onPick, pickLabel = "Agregar" }: { onPick: (ex
         />
       </div>
 
+      {coach && (
       <button
         onClick={() => setCustom(true)}
         className="mb-3 flex h-11 w-full items-center justify-center gap-2 rounded-btn border border-dashed border-orchid/60 text-[14px] font-semibold text-orchid hover:bg-orchid/5"
       >
         <PencilLine className="size-4" /> ¿No está? Crea tu propio ejercicio
       </button>
+      )}
 
       {source === "catalog" && (
         <div className="mb-3 space-y-2">
@@ -190,9 +201,9 @@ export function ExerciseLibrary({ onPick, pickLabel = "Agregar" }: { onPick: (ex
         ) : catItems.length === 0 ? (
           <EmptyState
             icon={SearchX}
-            text="Sin resultados. Prueba con otra palabra en inglés (squat, row, lunge…) o créalo tú."
+            text={coach ? "Sin resultados. Prueba con otra palabra en inglés (squat, row, lunge…) o créalo tú." : "Sin resultados. Prueba con otra palabra en inglés (squat, row, lunge…)."}
             action={
-              <Button variant="secondary" size="sm" icon={PencilLine} onClick={() => setCustom(true)}>
+              coach && <Button variant="secondary" size="sm" icon={PencilLine} onClick={() => setCustom(true)}>
                 Crear “{q.trim() || "ejercicio"}”
               </Button>
             }
@@ -227,7 +238,7 @@ export function ExerciseLibrary({ onPick, pickLabel = "Agregar" }: { onPick: (ex
           icon={BookOpen}
           text={dq ? "No está en tu biblioteca." : "Tu biblioteca está vacía. Los ejercicios que agregues desde el catálogo o crees tú se guardan aquí."}
           action={
-            <Button variant="secondary" size="sm" icon={PencilLine} onClick={() => setCustom(true)}>
+            coach && <Button variant="secondary" size="sm" icon={PencilLine} onClick={() => setCustom(true)}>
               Crear ejercicio propio
             </Button>
           }
@@ -261,7 +272,7 @@ export function ExerciseLibrary({ onPick, pickLabel = "Agregar" }: { onPick: (ex
 
       <ExerciseDetailSheet
         ex={detail?.ex ?? null}
-        editable={!detail?.cat}
+        editable={coach && !detail?.cat}
         onClose={() => setDetail(null)}
         action={
           detail && (

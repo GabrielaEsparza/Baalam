@@ -73,7 +73,7 @@ export function RequireFeature({
   feature,
   children,
 }: {
-  feature: "routine" | "open_gym" | "classes";
+  feature: "routine" | "open_gym" | "classes" | "self_routine";
   children: ReactNode;
 }) {
   const { data: me } = useMe();

@@ -50,6 +50,9 @@ class Profile(TimeStamped):
     show_in_podium = models.BooleanField(default=True)
     share_achievements = models.BooleanField(default=True)
     coach_notes = models.TextField(blank=True, help_text="Privadas: solo las ve el coach")
+    self_routine = models.BooleanField(
+        default=False, help_text="La cuenta principal le permite armar su propia rutina"
+    )
 
     class Meta:
         verbose_name = "perfil"

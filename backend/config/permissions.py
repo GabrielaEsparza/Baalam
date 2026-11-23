@@ -30,6 +30,41 @@ def coach_required(func):
     return wrapper
 
 
+def _is_staff(request) -> bool:
+    return _profile(request).role in ("coach", "admin")
+
+
+def _self_routine(request) -> bool:
+    from apps.accounts.services import features_for
+
+    return features_for(request.user)["self_routine"]
+
+
+def routine_editor_required(func):
+    """Coach, o el propio miembro si la cuenta principal le permite armar su rutina."""
+
+    @wraps(func)
+    def wrapper(request, *args, **kwargs):
+        own = kwargs.get("member_id") == request.user.id
+        if not (_is_staff(request) or (own and _self_routine(request))):
+            raise HttpError(403, "Solo para coaches.")
+        return func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def exercise_search_required(func):
+    """Buscar e importar ejercicios: coaches y miembros que arman su propia rutina."""
+
+    @wraps(func)
+    def wrapper(request, *args, **kwargs):
+        if not (_is_staff(request) or _self_routine(request)):
+            raise HttpError(403, "Solo para coaches.")
+        return func(request, *args, **kwargs)
+
+    return wrapper
+
+
 def admin_required(func):
     @wraps(func)
     def wrapper(request, *args, **kwargs):

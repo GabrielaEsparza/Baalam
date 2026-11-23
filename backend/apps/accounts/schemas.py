@@ -25,6 +25,8 @@ class Features(Schema):
     access: bool
     coach: bool
     admin: bool
+    self_routine: bool = False
+    owner: bool = False
 
 
 class MembershipBrief(Schema):
@@ -139,6 +141,7 @@ class MemberDetail(MemberRow):
     needs_access_link: bool = False
     uses_google: bool = False
     includes_routine: bool = False  # Plan Clases: sin rutina personalizada
+    self_routine: bool = False  # la cuenta principal le deja armar su propia rutina
     payments: list[dict]
     recent_checkins: list[datetime]
 
@@ -148,6 +151,7 @@ class MemberPatch(Schema):
     sessions_per_week: int | None = Field(None, ge=1, le=7)
     status: Literal["active", "blocked"] | None = None
     role: Literal["member", "coach", "admin"] | None = None
+    self_routine: bool | None = None  # solo la cuenta principal
 
 
 class DashboardOut(Schema):

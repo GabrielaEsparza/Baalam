@@ -7,6 +7,7 @@ import { Avatar } from "@/components/Avatar";
 import { Button, Card, EmptyState, ErrorBox, Field, Input, PageTitle, Sheet, Spinner, StatusBadge, cx } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { fmtDate } from "@/lib/format";
+import { useMe } from "@/app/session";
 
 const FILTERS = [
   { value: "", label: "Todos" },
@@ -16,11 +17,15 @@ const FILTERS = [
   { value: "paused", label: "Pausados" },
   { value: "pending", label: "Pendientes" },
 ];
+// Solo la cuenta principal ve a las coaches (para poder eliminarlas).
+const COACH_FILTER = { value: "coach", label: "Coaches" };
 
 export default function MembersPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [adding, setAdding] = useState(false);
+  const { data: me } = useMe();
+  const filters = me?.features.owner ? [...FILTERS, COACH_FILTER] : FILTERS;
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["coach", "members", q, status],
     queryFn: () => unwrap(api.GET("/api/coach/members", { params: { query: { q, status } } })),
@@ -45,7 +50,7 @@ export default function MembersPage() {
         />
       </div>
       <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {FILTERS.map((f) => (
+        {filters.map((f) => (
           <button
             key={f.value}
             onClick={() => setStatus(f.value)}

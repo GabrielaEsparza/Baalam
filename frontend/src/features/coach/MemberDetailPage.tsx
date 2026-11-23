@@ -6,7 +6,7 @@ import { Avatar } from "@/components/Avatar";
 import { CoachNutritionCard } from "@/features/nutrition/CoachNutritionCard";
 import { api, unwrap } from "@/api/client";
 import { useMe } from "@/app/session";
-import { Button, Card, ErrorBox, Field, Input, SectionTitle, Sheet, Spinner, StatusBadge, Stepper, Tabs } from "@/components/ui";
+import { Button, Card, ErrorBox, Field, Input, SectionTitle, Sheet, Spinner, StatusBadge, Stepper, Switch, Tabs } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { fmtDate, fmtMoney, fmtTime, isoDate, methodLabel, waLink } from "@/lib/format";
 
@@ -14,6 +14,7 @@ export default function MemberDetailPage() {
   const id = Number(useParams().id);
   const { data: me } = useMe();
   const isAdmin = !!me?.features.admin;
+  const isOwner = !!me?.features.owner; // la cuenta principal del gym
   const qc = useQueryClient();
   const toast = useToast();
   const loc = useLocation() as { state?: { justCreated?: boolean; accessLink?: string } };
@@ -36,7 +37,7 @@ export default function MemberDetailPage() {
   const onErr = (e: unknown) => toast((e as Error).message, "error");
 
   const patch = useMutation({
-    mutationFn: (body: { coach_notes?: string; sessions_per_week?: number; role?: "member" | "coach" }) =>
+    mutationFn: (body: { coach_notes?: string; sessions_per_week?: number; role?: "member" | "coach"; self_routine?: boolean }) =>
       unwrap(api.PATCH("/api/coach/members/{member_id}", { params: { path: { member_id: id } }, body })),
     onSuccess: () => {
       toast("Guardado");
@@ -167,6 +168,16 @@ export default function MemberDetailPage() {
             Armar su rutina
           </Button>
         </Link>
+      )}
+      {m.includes_routine && m.role === "member" && isOwner && (
+        <Card className="mt-3">
+          <Switch
+            label="Puede armar su propia rutina"
+            checked={m.self_routine}
+            onChange={(v) => patch.mutate({ self_routine: v })}
+          />
+          <p className="text-sm text-ink-2">Desde Entrenar podrá elegir sus ejercicios. Tú también puedes seguir editándola.</p>
+        </Card>
       )}
 
       {m.sessions_per_week !== null && (
@@ -310,7 +321,7 @@ export default function MemberDetailPage() {
         }}
       />
 
-      {m.role === "member" && <DeleteMemberButton memberId={id} name={m.full_name} />}
+      {isOwner && m.id !== me?.id && <DeleteMemberButton memberId={id} name={m.full_name} />}
     </div>
   );
 }

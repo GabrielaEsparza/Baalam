@@ -40,14 +40,18 @@ import {
   type ItemDraft,
 } from "./ExerciseSheets";
 import { putDay, routineKey, useMemberRoutine } from "./routineApi";
+import { useMe } from "@/app/session";
 
 type Draft = Omit<RoutineItem, "id" | "order"> & {
   id?: number;
   order?: number;
 };
 
-export default function RoutineEditor() {
-  const memberId = Number(useParams().id);
+/** `self`: el miembro arma su propia rutina (si la cuenta principal se lo permite). */
+export default function RoutineEditor({ self = false }: { self?: boolean }) {
+  const { data: me } = useMe();
+  const param = Number(useParams().id);
+  const memberId = self ? (me?.id ?? 0) : param;
   const qc = useQueryClient();
   const toast = useToast();
   const { data, isLoading, error, refetch } = useMemberRoutine(memberId);
@@ -85,7 +89,10 @@ export default function RoutineEditor() {
 
   const save = useMutation({
     mutationFn: (items: Draft[]) =>
-      putDay(qc, memberId, weekday!, { label, focus, items }),
+      putDay(qc, memberId, weekday!, { label, focus, items }).then((r) => {
+        if (self) qc.invalidateQueries({ queryKey: ["workout-today"] });
+        return r;
+      }),
     onError: (e) => {
       toast((e as Error).message, "error");
       qc.invalidateQueries({ queryKey: routineKey(memberId) });
@@ -104,6 +111,7 @@ export default function RoutineEditor() {
       setCopyOpen(false);
       qc.invalidateQueries({ queryKey: routineKey(memberId) });
       qc.invalidateQueries({ queryKey: ["coach", "routine-members"] });
+      if (self) qc.invalidateQueries({ queryKey: ["workout-today"] });
     },
     onError: (e) => toast((e as Error).message, "error"),
   });
@@ -142,11 +150,17 @@ export default function RoutineEditor() {
   return (
     <div>
       <Link
-        to="/coach/rutinas"
+        to={self ? "/app/entrenar" : "/coach/rutinas"}
         className="mb-2 inline-flex h-11 items-center gap-1 font-medium text-ink-2 hover:text-ink"
       >
-        <ArrowLeft className="size-5" /> Rutinas
+        <ArrowLeft className="size-5" /> {self ? "Entrenar" : "Rutinas"}
       </Link>
+      {self ? (
+        <header className="mb-5">
+          <p className="t-label">Arma tu</p>
+          <h1 className="t-h2 text-orchid">Rutina</h1>
+        </header>
+      ) : (
       <header className="mb-5 flex items-center gap-3">
         <Avatar
           url={data.member.avatar_url}
@@ -158,6 +172,7 @@ export default function RoutineEditor() {
           <h1 className="t-h2 truncate text-orchid">{data.member.full_name}</h1>
         </div>
       </header>
+      )}
 
       {/* Selector de día */}
       <div className="mb-1 grid grid-cols-7 gap-1.5">
@@ -202,8 +217,10 @@ export default function RoutineEditor() {
       </div>
       <p className="mb-4 text-sm text-ink-2">
         {data.booked_weekdays.length
-          ? `${first} reservó: ${data.booked_weekdays.map((d) => WEEKDAYS[d]).join(", ")}.`
-          : `${first} aún no reserva su mes; puedes armar cualquier día.`}
+          ? `${self ? "Reservaste" : `${first} reservó`}: ${data.booked_weekdays.map((d) => WEEKDAYS[d]).join(", ")}.`
+          : self
+            ? "Aún no reservas tu mes; puedes armar cualquier día."
+            : `${first} aún no reserva su mes; puedes armar cualquier día.`}
       </p>
 
       <Card className="space-y-3">
@@ -373,6 +390,7 @@ export default function RoutineEditor() {
         title="Agregar ejercicio"
       >
         <ExerciseLibrary
+          coach={!self}
           onPick={(ex) => {
             setPicker(false);
             setEditing({ draft: newDraft(ex), index: null });
@@ -409,7 +427,7 @@ export default function RoutineEditor() {
 
       <ExerciseDetailSheet
         ex={detail}
-        editable
+        editable={!self}
         onClose={() => setDetail(null)}
       />
 

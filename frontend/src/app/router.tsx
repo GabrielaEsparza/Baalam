@@ -88,6 +88,16 @@ export const router = createBrowserRouter([
               </RequireFeature>
             ),
           },
+          {
+            path: "mi-rutina",
+            element: (
+              <RequireFeature feature="self_routine">
+                <S>
+                  <RoutineEditor self />
+                </S>
+              </RequireFeature>
+            ),
+          },
           { path: "progreso", element: <S><ProgressPage /></S> },
           { path: "podio", element: <S><PodiumPage /></S> },
           { path: "horarios", element: <S><SchedulePage /></S> },

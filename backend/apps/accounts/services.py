@@ -112,6 +112,17 @@ def save_avatar(user, uploaded) -> Profile:
     return profile
 
 
+def is_owner(user) -> bool:
+    """La cuenta principal del gym (settings.OWNER_EMAIL)."""
+    from django.conf import settings
+
+    email = (user.email or user.get_username() or "").strip().lower()
+    return bool(settings.OWNER_EMAIL) and email == settings.OWNER_EMAIL and get_profile(user).role in (
+        Profile.Role.COACH,
+        Profile.Role.ADMIN,
+    )
+
+
 def features_for(user) -> dict:
     """Qué puede usar el usuario según su rol y su plan con acceso vigente."""
     from apps.memberships.services import current_membership, display_status, has_access
@@ -125,9 +136,11 @@ def features_for(user) -> dict:
         "routine": bool(plan and plan.includes_routine),
         "open_gym": bool(plan and plan.includes_open_gym),
         "classes": bool(plan and plan.includes_classes),
+        "self_routine": bool(plan and plan.includes_routine and access and profile.self_routine),
         "access": access,
         "coach": profile.role in (Profile.Role.COACH, Profile.Role.ADMIN),
         "admin": profile.role in (Profile.Role.COACH, Profile.Role.ADMIN),
+        "owner": is_owner(user),
     }
 
 
@@ -264,7 +277,10 @@ def delete_account(user, password: str = "", *, by=None) -> None:
     from apps.training.models import DaySwap, RoutineTemplate, ScheduledWorkout, WorkoutSession
 
     profile = get_profile(user)
-    if profile.role in (Profile.Role.COACH, Profile.Role.ADMIN):
+    staff = profile.role in (Profile.Role.COACH, Profile.Role.ADMIN)
+    if by is not None and not is_owner(by):
+        raise ServiceError("Solo la cuenta principal puede eliminar cuentas.", "forbidden", 403)
+    if staff and (by is None or is_owner(user)):
         raise ServiceError("La cuenta de la coach no se puede eliminar desde aquí.", "forbidden", 403)
     if not user.is_active:
         raise ServiceError("Esta cuenta ya estaba eliminada.", "already_deleted")
@@ -312,6 +328,7 @@ def delete_account(user, password: str = "", *, by=None) -> None:
     user.email = ""
     user.first_name = user.last_name = ""
     user.is_active = False
+    user.is_staff = user.is_superuser = False  # si era coach, pierde también el panel /admin
     user.set_unusable_password()
     user.save()
 

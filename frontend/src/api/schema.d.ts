@@ -1682,6 +1682,16 @@ export interface components {
             coach: boolean;
             /** Admin */
             admin: boolean;
+            /**
+             * Self Routine
+             * @default false
+             */
+            self_routine: boolean;
+            /**
+             * Owner
+             * @default false
+             */
+            owner: boolean;
         };
         /** MeOut */
         MeOut: {
@@ -2439,6 +2449,11 @@ export interface components {
              * @default false
              */
             includes_routine: boolean;
+            /**
+             * Self Routine
+             * @default false
+             */
+            self_routine: boolean;
             /** Payments */
             payments: {
                 [key: string]: unknown;
@@ -2456,6 +2471,8 @@ export interface components {
             status?: ("active" | "blocked") | null;
             /** Role */
             role?: ("member" | "coach" | "admin") | null;
+            /** Self Routine */
+            self_routine?: boolean | null;
         };
         /** CoachDeleteIn */
         CoachDeleteIn: {

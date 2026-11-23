@@ -6,7 +6,7 @@ from ninja import File, Router, Schema
 from ninja.files import UploadedFile
 from pydantic import Field
 
-from config.permissions import coach_required
+from config.permissions import coach_required, exercise_search_required, routine_editor_required
 
 from . import exercisedb, services
 from .models import Exercise
@@ -114,7 +114,7 @@ def finish(request):
 # ---------------- Coach: catálogo ExerciseDB (proxy con caché) ----------------
 
 @coach_router.get("/exercises/catalog", response=dict)
-@coach_required
+@exercise_search_required
 def catalog(request, q: str = "", body_part: str = "", equipment: str = "", cursor: str = ""):
     res = exercisedb.search(name=q, body_part=body_part, equipment=equipment, cursor=cursor)
     imported = dict(
@@ -128,7 +128,7 @@ def catalog(request, q: str = "", body_part: str = "", equipment: str = "", curs
 
 
 @coach_router.get("/exercises/filters", response=dict)
-@coach_required
+@exercise_search_required
 def catalog_filters(request):
     return exercisedb.filters()
 
@@ -136,7 +136,7 @@ def catalog_filters(request):
 # ---------------- Coach: biblioteca propia ----------------
 
 @coach_router.get("/exercises", response=list[dict])
-@coach_required
+@exercise_search_required
 def library(request, q: str = "", muscle: str = ""):
     return [services.exercise_payload(e) for e in services.library(q, muscle)[:200]]
 
@@ -165,7 +165,7 @@ def delete_media(request, exercise_id: int):
 
 
 @coach_router.post("/exercises/import", response=dict)
-@coach_required
+@exercise_search_required
 def import_exercise(request, data: ImportIn):
     if data.name and data.gif_url:
         ex = services.import_from_payload(data.dict(), data.name_es)
@@ -194,7 +194,7 @@ def routine_members(request):
 
 
 @coach_router.get("/routines/{member_id}", response=dict)
-@coach_required
+@routine_editor_required
 def routine(request, member_id: int):
     member = get_object_or_404(User, id=member_id)
     from apps.accounts.services import get_profile
@@ -208,7 +208,7 @@ def routine(request, member_id: int):
 
 
 @coach_router.put("/routines/{member_id}/days/{weekday}", response=dict)
-@coach_required
+@routine_editor_required
 def save_day(request, member_id: int, weekday: int, data: DayIn):
     member = get_object_or_404(User, id=member_id)
     return services.save_day(
@@ -217,6 +217,6 @@ def save_day(request, member_id: int, weekday: int, data: DayIn):
 
 
 @coach_router.post("/routines/{member_id}/copy", response=dict)
-@coach_required
+@routine_editor_required
 def copy_day(request, member_id: int, data: CopyIn):
     return services.copy_day(get_object_or_404(User, id=member_id), data.from_weekday, data.to_weekday, by=request.user)

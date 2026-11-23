@@ -65,8 +65,8 @@ class CoachDeleteMemberTests(TestCase):
         rutina, _ = make_plans()
         self.m = make_member("miembro@t.mx")
         pay(self.m, rutina)
-        self.coach = make_member("coach@t.mx")
-        set_role(self.coach, "coach")
+        self.coach = make_member("Coach@Baalam.com")  # la cuenta principal (OWNER_EMAIL)
+        set_role(self.coach, "admin")
         self.client.force_login(self.coach)
 
     def test_requires_typing_eliminar(self):
@@ -86,10 +86,21 @@ class CoachDeleteMemberTests(TestCase):
         again = self.client.post(f"/api/coach/members/{self.m.id}/delete", {"confirm": "ELIMINAR"}, content_type="application/json")
         self.assertEqual(again.status_code, 400)
 
-    def test_cannot_delete_coaches_or_self_and_members_cannot_use_it(self):
+    def test_only_owner_deletes_and_can_remove_coaches_but_not_itself(self):
         other_coach = make_member("coach2@t.mx")
         set_role(other_coach, "coach")
-        self.assertEqual(self.client.post(f"/api/coach/members/{other_coach.id}/delete", {"confirm": "ELIMINAR"}, content_type="application/json").status_code, 403)
-        self.assertEqual(self.client.post(f"/api/coach/members/{self.coach.id}/delete", {"confirm": "ELIMINAR"}, content_type="application/json").status_code, 400)
+        url = lambda u: f"/api/coach/members/{u.id}/delete"  # noqa: E731
+        ok = {"confirm": "ELIMINAR"}
+        self.assertEqual(self.client.post(url(self.coach), ok, content_type="application/json").status_code, 400)
+        # Otra coach no puede eliminar a nadie
+        self.client.force_login(other_coach)
+        self.assertEqual(self.client.post(url(self.m), ok, content_type="application/json").status_code, 403)
+        self.assertTrue(User.objects.get(id=self.m.id).is_active)
+        # La cuenta principal sí elimina coaches (y pierden el panel /admin)
+        self.client.force_login(self.coach)
+        self.assertIn(other_coach.id, [r["id"] for r in self.client.get("/api/coach/members?status=coach").json()])
+        self.assertEqual(self.client.post(url(other_coach), ok, content_type="application/json").status_code, 200)
+        u = User.objects.get(id=other_coach.id)
+        self.assertFalse(u.is_active or u.is_staff or u.is_superuser)
         self.client.force_login(self.m)
         self.assertEqual(self.client.post(f"/api/coach/members/{self.coach.id}/delete", {"confirm": "ELIMINAR"}, content_type="application/json").status_code, 403)

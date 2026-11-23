@@ -311,7 +311,18 @@ def _members_qs():
 @coach_router.get("/members", response=list[MemberRow])
 @coach_required
 def members(request, q: str = "", status: str = ""):
-    qs = _members_qs()
+    if status == "coach":
+        # Coaches del equipo (para que la cuenta principal pueda abrir su ficha).
+        qs = (
+            Profile.objects.filter(role__in=[Profile.Role.COACH, Profile.Role.ADMIN], user__is_active=True)
+            .exclude(user=request.user)
+            .select_related("user")
+            .annotate(last=Max("user__checkins__date"))
+            .order_by("full_name")
+        )
+        status = ""
+    else:
+        qs = _members_qs()
     if q:
         from django.db.models import Q
 
@@ -346,6 +357,7 @@ def member_detail(request, member_id: int):
         "needs_access_link": not p.user.has_usable_password() and p.user.last_login is None,
         "uses_google": not p.user.has_usable_password() and p.user.last_login is not None,
         "includes_routine": bool(m and m.plan.includes_routine),
+        "self_routine": p.self_routine,
         "payments": (
             list(p.user.payments.values("id", "amount_mxn", "method", "paid_at", "note")[:24]) if pays else []
         ),
@@ -365,6 +377,10 @@ def member_patch(request, member_id: int, data: MemberPatch):
             raise HttpError(400, "No puedes quitarte tu propio rol de coach.")
         services.set_role(p.user, d["role"])
         p.refresh_from_db()
+    if d.get("self_routine") is not None:
+        if not services.is_owner(request.user):
+            raise HttpError(403, "Solo la cuenta principal decide quién arma su propia rutina.")
+        p.self_routine = d["self_routine"]
     if "coach_notes" in d:
         p.coach_notes = d["coach_notes"]
     if "status" in d:
@@ -403,6 +419,8 @@ def coach_delete_member(request, member_id: int, data: CoachDeleteIn):
     Hay que escribir ELIMINAR para confirmar."""
     if data.confirm.strip().upper() != "ELIMINAR":
         raise HttpError(400, "Escribe ELIMINAR para confirmar.")
+    if not services.is_owner(request.user):
+        raise HttpError(403, "Solo la cuenta principal puede eliminar cuentas.")
     user = get_object_or_404(User, id=member_id)
     if user == request.user:
         raise HttpError(400, "No puedes eliminar tu propia cuenta desde aquí.")

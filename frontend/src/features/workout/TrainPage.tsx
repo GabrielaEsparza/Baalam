@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get as idbGet, set as idbSet } from "idb-keyval";
-import { ArrowLeftRight, Check, ChevronDown, CloudOff, Dumbbell, Flag, Flame, Repeat, RotateCcw, Timer, Trophy, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowLeftRight, Check, ChevronDown, ClipboardList, CloudOff, Dumbbell, Flag, Flame, Repeat, RotateCcw, Timer, Trophy, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { api, unwrap, ApiError } from "@/api/client";
 import type { FinishResult, SwapOption, TodayItem, TodayWorkoutFull } from "@/api/types";
 import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { Button, Card, EmptyState, ErrorBox, PageTitle, Sheet, Spinner, cx } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
+import { useMe } from "@/app/session";
 import { trList } from "@/lib/exercise-i18n";
 import { WD_SHORT, fmtDuration, fmtReps } from "@/lib/format";
 
@@ -66,6 +68,7 @@ async function flushQueue(): Promise<number> {
 export default function TrainPage() {
   const qc = useQueryClient();
   const toast = useToast();
+  const selfRoutine = !!useMe().data?.features.self_routine;
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: KEY,
     queryFn: async () => (await unwrap(api.GET("/api/workouts/today"))) as unknown as TodayWorkoutFull,
@@ -204,6 +207,14 @@ export default function TrainPage() {
     <div>
       <WeekStrip today={data.weekday} days={data.routine_weekdays} />
 
+      {selfRoutine && (
+        <Link to="/app/mi-rutina" className="mb-4 block">
+          <Button variant="secondary" full icon={ClipboardList}>
+            Armar mi rutina
+          </Button>
+        </Link>
+      )}
+
       {data.swapped_from !== null && (
         <div role="status" className="mb-4 flex items-start gap-3 rounded-card border border-gold bg-gold/15 px-4 py-3">
           <ArrowLeftRight className="mt-0.5 size-5 shrink-0 text-warning" />
@@ -239,7 +250,10 @@ export default function TrainPage() {
                 )}
               </>
             ) : (
-              <EmptyState icon={Dumbbell} text="Aún no tienes rutina. Tu coach te asignará una pronto." />
+              <EmptyState
+                icon={Dumbbell}
+                text={selfRoutine ? "Aún no tienes rutina. Ármala con el botón de arriba." : "Aún no tienes rutina. Tu coach te asignará una pronto."}
+              />
             )}
           </Card>
         </>
