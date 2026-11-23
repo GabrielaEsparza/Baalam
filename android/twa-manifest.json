@@ -1,8 +1,8 @@
 {
   "packageId": "com.lumirasolutions.baalamgym",
   "host": "baalamgym.com",
-  "name": "BÃALAM GYM",
-  "launcherName": "BÃALAM",
+  "name": "BÁALAM GYM",
+  "launcherName": "BÁALAM",
   "display": "standalone",
   "orientation": "portrait",
   "themeColor": "#120A1C",
@@ -21,14 +21,16 @@
     "path": "C:/Users/multi/Documents/BAALAM-firma-android/baalam-upload.jks",
     "alias": "baalam"
   },
-  "appVersionName": "1.0.0",
-  "appVersionCode": 1,
+  "appVersionName": "1.0.1",
+  "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://baalamgym.com/manifest.webmanifest",
   "fallbackType": "customtabs",
   "features": {},
-  "alphaDependencies": { "enabled": false },
+  "alphaDependencies": {
+    "enabled": false
+  },
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
@@ -37,5 +39,5 @@
   "fingerprints": [],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
-  "appVersion": "1.0.0"
+  "appVersion": "1.0.1"
 }
