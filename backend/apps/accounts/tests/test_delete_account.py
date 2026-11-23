@@ -65,7 +65,7 @@ class CoachDeleteMemberTests(TestCase):
         rutina, _ = make_plans()
         self.m = make_member("miembro@t.mx")
         pay(self.m, rutina)
-        self.coach = make_member("Coach@Baalam.com")  # la cuenta principal (OWNER_EMAIL)
+        self.coach = make_member("Baalamgymmz@gmail.com")  # la cuenta principal (OWNER_EMAIL)
         set_role(self.coach, "admin")
         self.client.force_login(self.coach)
 

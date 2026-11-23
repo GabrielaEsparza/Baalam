@@ -14,7 +14,7 @@ class SelfRoutineTests(TestCase):
         pay(self.m, rutina)
         self.other = make_member("otro@t.mx")
         pay(self.other, rutina)
-        self.owner = make_member("coach@baalam.com")
+        self.owner = make_member("baalamgymmz@gmail.com")
         set_role(self.owner, "admin")
         self.coach = make_member("coach2@t.mx")
         set_role(self.coach, "coach")

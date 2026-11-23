@@ -208,4 +208,4 @@ WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}
 
 # Cuenta principal del gym: la única que elimina cuentas (miembros y coaches)
 # y decide quién puede armarse su propia rutina.
-OWNER_EMAIL = os.getenv("OWNER_EMAIL", "coach@baalam.com").strip().lower()
+OWNER_EMAIL = os.getenv("OWNER_EMAIL", "baalamgymmz@gmail.com").strip().lower()
