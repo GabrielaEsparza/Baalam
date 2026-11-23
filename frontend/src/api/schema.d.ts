@@ -940,6 +940,27 @@ export interface paths {
         patch: operations["apps_accounts_api_member_patch"];
         trace?: never;
     };
+    "/api/coach/members/{member_id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Coach Delete Member
+         * @description La coach elimina la cuenta de un miembro (duplicadas, de prueba o a petición de la persona).
+         *     Hay que escribir ELIMINAR para confirmar.
+         */
+        post: operations["apps_accounts_api_coach_delete_member"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/coach/members/{member_id}/access-link": {
         parameters: {
             query?: never;
@@ -2430,6 +2451,11 @@ export interface components {
             status?: ("active" | "blocked") | null;
             /** Role */
             role?: ("member" | "coach" | "admin") | null;
+        };
+        /** CoachDeleteIn */
+        CoachDeleteIn: {
+            /** Confirm */
+            confirm: string;
         };
         /** DashboardOut */
         DashboardOut: {
@@ -4285,6 +4311,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MemberDetail"];
+                };
+            };
+        };
+    };
+    apps_accounts_api_coach_delete_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                member_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CoachDeleteIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };

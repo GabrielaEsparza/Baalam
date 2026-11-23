@@ -58,3 +58,38 @@ class DeleteAccountTests(TestCase):
         set_role(self.m, "coach")
         r = self.client.post("/api/me/delete", {"password": "sentadilla-123"}, content_type="application/json")
         self.assertEqual(r.status_code, 403)
+
+
+class CoachDeleteMemberTests(TestCase):
+    def setUp(self):
+        rutina, _ = make_plans()
+        self.m = make_member("miembro@t.mx")
+        pay(self.m, rutina)
+        self.coach = make_member("coach@t.mx")
+        set_role(self.coach, "coach")
+        self.client.force_login(self.coach)
+
+    def test_requires_typing_eliminar(self):
+        r = self.client.post(f"/api/coach/members/{self.m.id}/delete", {"confirm": "si"}, content_type="application/json")
+        self.assertEqual(r.status_code, 400)
+        self.assertTrue(User.objects.get(id=self.m.id).is_active)
+
+    def test_coach_deletes_member_without_password_keeps_payments(self):
+        r = self.client.post(f"/api/coach/members/{self.m.id}/delete", {"confirm": "eliminar"}, content_type="application/json")
+        self.assertEqual(r.status_code, 200, r.content)
+        u = User.objects.get(id=self.m.id)
+        self.assertFalse(u.is_active)
+        self.assertEqual(u.profile.full_name, "Cuenta eliminada")
+        self.assertTrue(Payment.objects.filter(member=u).exists())
+        ids = [r["id"] for r in self.client.get("/api/coach/members").json()]
+        self.assertNotIn(self.m.id, ids)  # ya no aparece en la lista
+        again = self.client.post(f"/api/coach/members/{self.m.id}/delete", {"confirm": "ELIMINAR"}, content_type="application/json")
+        self.assertEqual(again.status_code, 400)
+
+    def test_cannot_delete_coaches_or_self_and_members_cannot_use_it(self):
+        other_coach = make_member("coach2@t.mx")
+        set_role(other_coach, "coach")
+        self.assertEqual(self.client.post(f"/api/coach/members/{other_coach.id}/delete", {"confirm": "ELIMINAR"}, content_type="application/json").status_code, 403)
+        self.assertEqual(self.client.post(f"/api/coach/members/{self.coach.id}/delete", {"confirm": "ELIMINAR"}, content_type="application/json").status_code, 400)
+        self.client.force_login(self.m)
+        self.assertEqual(self.client.post(f"/api/coach/members/{self.coach.id}/delete", {"confirm": "ELIMINAR"}, content_type="application/json").status_code, 403)

@@ -245,8 +245,9 @@ DELETED_NAME = "Cuenta eliminada"
 
 
 @transaction.atomic
-def delete_account(user, password: str = "") -> None:
-    """La persona elimina su cuenta desde la app (requisito de Google Play).
+def delete_account(user, password: str = "", *, by=None) -> None:
+    """Elimina una cuenta: la persona desde la app (requisito de Google Play; pide su contraseña)
+    o la coach desde la ficha del miembro (`by` = la coach; no pide contraseña).
 
     Se BORRAN sus datos personales y de uso: peso y medidas, fotos, comidas, agua, rutinas,
     entrenamientos, puntos, avisos y dispositivos. Se ANONIMIZA lo que el gym necesita conservar
@@ -265,7 +266,9 @@ def delete_account(user, password: str = "") -> None:
     profile = get_profile(user)
     if profile.role in (Profile.Role.COACH, Profile.Role.ADMIN):
         raise ServiceError("La cuenta de la coach no se puede eliminar desde aquí.", "forbidden", 403)
-    if user.has_usable_password() and not user.check_password(password or ""):
+    if not user.is_active:
+        raise ServiceError("Esta cuenta ya estaba eliminada.", "already_deleted")
+    if by is None and user.has_usable_password() and not user.check_password(password or ""):
         raise ServiceError("La contraseña no es correcta.", "bad_password")
 
     for photo in ProgressPhoto.objects.filter(member=user):

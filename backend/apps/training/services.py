@@ -74,7 +74,7 @@ def import_from_payload(item: dict, name_es: str = "") -> Exercise:
 def routine_members():
     """Miembros cuyo plan vigente incluye rutina personalizada."""
     out = []
-    for p in Profile.objects.filter(role=Profile.Role.MEMBER).select_related("user").order_by("full_name"):
+    for p in Profile.objects.filter(role=Profile.Role.MEMBER, user__is_active=True).select_related("user").order_by("full_name"):
         m = current_membership(p.user)
         if not m or not m.plan.includes_routine:
             continue

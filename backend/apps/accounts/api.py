@@ -301,7 +301,7 @@ def _member_row(p: Profile, last_checkin=None):
 
 def _members_qs():
     return (
-        Profile.objects.filter(role=Profile.Role.MEMBER)
+        Profile.objects.filter(role=Profile.Role.MEMBER, user__is_active=True)
         .select_related("user")
         .annotate(last=Max("user__checkins__date"))
         .order_by("full_name")
@@ -389,6 +389,24 @@ def create_member(request, data: NewMemberIn):
     """Alta desde recepción: crea la cuenta y devuelve el enlace para que cree su contraseña."""
     user = services.coach_create_member(**data.dict(), by=request.user)
     return 201, {"id": user.id, "access_link": services.access_link(user, request.build_absolute_uri("/"))}
+
+
+class CoachDeleteIn(Schema):
+    confirm: str
+
+
+@coach_router.post("/members/{member_id}/delete", response=dict)
+@coach_required
+def coach_delete_member(request, member_id: int, data: CoachDeleteIn):
+    """La coach elimina la cuenta de un miembro (duplicadas, de prueba o a petición de la persona).
+    Hay que escribir ELIMINAR para confirmar."""
+    if data.confirm.strip().upper() != "ELIMINAR":
+        raise HttpError(400, "Escribe ELIMINAR para confirmar.")
+    user = get_object_or_404(User, id=member_id)
+    if user == request.user:
+        raise HttpError(400, "No puedes eliminar tu propia cuenta desde aquí.")
+    services.delete_account(user, by=request.user)
+    return {"ok": True}
 
 
 @coach_router.post("/members/{member_id}/access-link", response=dict)

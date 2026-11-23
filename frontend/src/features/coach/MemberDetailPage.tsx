@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Banknote, CalendarCog, Copy, KeyRound, Send, ClipboardList, MessageCircle, Pause, Play, ShieldCheck, Trash2, UserCheck, UserX } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
@@ -309,6 +309,8 @@ export default function MemberDetailPage() {
           refresh();
         }}
       />
+
+      {m.role === "member" && <DeleteMemberButton memberId={id} name={m.full_name} />}
     </div>
   );
 }
@@ -564,5 +566,64 @@ function AccessCard({ memberId, name, phone, initialLink }: { memberId: number; 
       </div>
       {!phone && <p className="text-sm text-ink-2">No tiene teléfono: copia el mensaje y mándalo como prefieras.</p>}
     </Card>
+  );
+}
+
+
+/** Eliminar la cuenta de un miembro: hay que escribir ELIMINAR para confirmar. */
+function DeleteMemberButton({ memberId, name }: { memberId: number; name: string }) {
+  const nav = useNavigate();
+  const qc = useQueryClient();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const ok = text.trim().toUpperCase() === "ELIMINAR";
+  const del = useMutation({
+    mutationFn: () =>
+      unwrap(
+        api.POST("/api/coach/members/{member_id}/delete", {
+          params: { path: { member_id: memberId } },
+          body: { confirm: text.trim() },
+        }),
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["coach"] });
+      toast(`Se eliminó la cuenta de ${name}`);
+      nav("/coach/miembros", { replace: true });
+    },
+    onError: (e) => toast((e as Error).message, "error"),
+  });
+
+  return (
+    <div className="mt-10 border-t border-line pt-6">
+      <Button variant="danger" full icon={Trash2} onClick={() => setOpen(true)}>
+        Eliminar cuenta
+      </Button>
+      <Sheet
+        open={open}
+        onClose={() => {
+          setOpen(false);
+          setText("");
+        }}
+        title="¿Estás segura de que quieres eliminar esta cuenta?"
+      >
+        <div className="space-y-4 text-[15px]">
+          <p>
+            Vas a eliminar la cuenta de <b>{name}</b>. Se borran su perfil, foto, peso, medidas, comidas, rutinas,
+            entrenamientos, puntos y avisos, y ya no podrá entrar a la app. <b>No se puede deshacer.</b>
+          </p>
+          <p className="text-ink-2">
+            Sus pagos y asistencias se conservan como “Cuenta eliminada” para las cuentas del gym. Si vuelve, puede
+            registrarse de nuevo con el mismo correo.
+          </p>
+          <Field label="Para confirmar, escribe ELIMINAR">
+            <Input value={text} onChange={(e) => setText(e.target.value)} autoComplete="off" autoCapitalize="characters" placeholder="ELIMINAR" />
+          </Field>
+          <Button variant="danger" full icon={Trash2} loading={del.isPending} disabled={!ok} onClick={() => del.mutate()}>
+            Eliminar definitivamente
+          </Button>
+        </div>
+      </Sheet>
+    </div>
   );
 }
