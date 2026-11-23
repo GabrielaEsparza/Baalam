@@ -157,6 +157,46 @@
     }
    }
   },
+  "/api/me/delete": {
+   "post": {
+    "operationId": "apps_accounts_api_delete_account",
+    "summary": "Delete Account",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "description": "Elimina la cuenta de quien la pide (datos personales borrados; pagos y asistencias anonimizados).",
+    "tags": [
+     "miembro"
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DeleteAccountIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
   "/api/me": {
    "get": {
     "operationId": "apps_accounts_api_me",
@@ -4339,6 +4379,17 @@
      "password"
     ],
     "title": "ResetConfirmIn",
+    "type": "object"
+   },
+   "DeleteAccountIn": {
+    "properties": {
+     "password": {
+      "default": "",
+      "title": "Password",
+      "type": "string"
+     }
+    },
+    "title": "DeleteAccountIn",
     "type": "object"
    },
    "MePatch": {

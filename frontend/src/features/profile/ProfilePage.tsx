@@ -7,8 +7,10 @@ import type { Me } from "@/api/types";
 import { applyTheme, useMe, useSetMe } from "@/app/session";
 import { Button, Card, Field, Input, PageTitle, SectionTitle, Switch, Tabs } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
+import { Link } from "react-router-dom";
 import { useLogout } from "@/features/auth/useLogout";
 import { RemindersCard } from "./RemindersCard";
+import { DeleteAccount } from "./DeleteAccount";
 
 type Patch = Partial<Pick<Me, "full_name" | "phone" | "goal" | "greeting" | "theme" | "show_in_podium" | "share_achievements" | "sex">> & {
   height_cm?: string | null;
@@ -199,6 +201,13 @@ export default function ProfilePage() {
       <Button variant="danger" full className="mt-6" onClick={logout}>
         Cerrar sesión
       </Button>
+
+      <div className="mt-6 flex flex-col items-center gap-3 pb-4 text-sm">
+        <Link to="/privacidad" className="font-medium text-ink-2 hover:text-ink hover:underline">
+          Aviso de privacidad
+        </Link>
+        {!me.features.coach && <DeleteAccount />}
+      </div>
     </div>
   );
 }

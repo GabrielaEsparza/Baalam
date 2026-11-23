@@ -115,6 +115,18 @@ def do_logout(request):
     return {"ok": True}
 
 
+class DeleteAccountIn(Schema):
+    password: str = ""
+
+
+@me_router.post("/me/delete", response=dict)
+def delete_account(request, data: DeleteAccountIn):
+    """Elimina la cuenta de quien la pide (datos personales borrados; pagos y asistencias anonimizados)."""
+    services.delete_account(request.user, data.password)
+    logout(request)
+    return {"ok": True}
+
+
 class ResetIn(Schema):
     email: str
 

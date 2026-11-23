@@ -4,6 +4,7 @@ import { Spinner } from "@/components/ui";
 import { AppShell, CoachShell } from "@/layout/AppShell";
 import { RequireAuth, RequireFeature, RequireMember, RequireRole, ThemeSync } from "./session";
 import Landing from "@/features/public/Landing";
+import { DeleteAccountPage, PrivacyPage } from "@/features/public/LegalPages";
 import { LoginPage, RecoverPage, RegisterPage } from "@/features/auth/AuthPages";
 import HomePage from "@/features/home/HomePage";
 
@@ -52,6 +53,8 @@ export const router = createBrowserRouter([
       { path: "/login", element: <LoginPage /> },
       { path: "/registro", element: <RegisterPage /> },
       { path: "/recuperar", element: <RecoverPage /> },
+      { path: "/privacidad", element: <PrivacyPage /> },
+      { path: "/eliminar-cuenta", element: <DeleteAccountPage /> },
       {
         path: "/app/checkin",
         element: (

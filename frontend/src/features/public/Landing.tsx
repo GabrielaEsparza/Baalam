@@ -165,7 +165,14 @@ export default function Landing() {
       </section>
 
       <footer className="border-t border-[#3A2B48] px-4 py-8 text-center text-sm text-[#B8AEC2]">
-        © {new Date().getFullYear()} BÁALAM GYM
+        © {new Date().getFullYear()} BÁALAM GYM ·{" "}
+        <Link to="/privacidad" className="hover:text-white hover:underline">
+          Aviso de privacidad
+        </Link>{" "}
+        ·{" "}
+        <Link to="/eliminar-cuenta" className="hover:text-white hover:underline">
+          Eliminar cuenta
+        </Link>
       </footer>
     </div>
   );

@@ -239,3 +239,75 @@ def access_link(user, base_url: str) -> str:
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
     return f"{base_url.rstrip('/')}/recuperar?uid={uid}&token={token}&nuevo=1"
+
+
+DELETED_NAME = "Cuenta eliminada"
+
+
+@transaction.atomic
+def delete_account(user, password: str = "") -> None:
+    """La persona elimina su cuenta desde la app (requisito de Google Play).
+
+    Se BORRAN sus datos personales y de uso: peso y medidas, fotos, comidas, agua, rutinas,
+    entrenamientos, puntos, avisos y dispositivos. Se ANONIMIZA lo que el gym necesita conservar
+    por contabilidad y estadística (pagos, membresías, asistencias y reservas): quedan a nombre de
+    "Cuenta eliminada", sin correo, teléfono ni fecha de nacimiento. La cuenta queda inactiva.
+    """
+    from apps.checkin.models import CheckIn  # noqa: F401  (se conserva, anonimizada)
+    from apps.memberships.models import MembershipRequest
+    from apps.nutrition.models import FavoriteFood, FoodLog, NutritionGoal, QuickHide
+    from apps.podium.models import PodiumMonth, PointsLedger
+    from apps.progress.models import BodyLog, ProgressPhoto
+    from apps.reminders.models import PushSubscription, ReminderPrefs, SentReminder, WaterLog
+    from apps.schedule.models import WaitlistEntry
+    from apps.training.models import DaySwap, RoutineTemplate, ScheduledWorkout, WorkoutSession
+
+    profile = get_profile(user)
+    if profile.role in (Profile.Role.COACH, Profile.Role.ADMIN):
+        raise ServiceError("La cuenta de la coach no se puede eliminar desde aquí.", "forbidden", 403)
+    if user.has_usable_password() and not user.check_password(password or ""):
+        raise ServiceError("La contraseña no es correcta.", "bad_password")
+
+    for photo in ProgressPhoto.objects.filter(member=user):
+        photo.image.delete(save=False)
+    if profile.avatar:
+        profile.avatar.delete(save=False)
+    for model, field in (
+        (BodyLog, "member"), (ProgressPhoto, "member"), (FoodLog, "member"), (FavoriteFood, "member"),
+        (QuickHide, "member"), (NutritionGoal, "member"), (WaterLog, "member"), (PushSubscription, "user"),
+        (ReminderPrefs, "user"), (SentReminder, "user"), (PointsLedger, "member"), (DaySwap, "member"),
+        (WorkoutSession, "member"), (ScheduledWorkout, "member"), (RoutineTemplate, "member"),
+        (MembershipRequest, "member"), (WaitlistEntry, "member"),
+    ):
+        model.objects.filter(**{field: user}).delete()
+
+    # Podios ya cerrados: el nombre deja de aparecer.
+    for pm in PodiumMonth.objects.all():
+        changed = False
+        for row in pm.ranking:
+            if row.get("member_id") == user.id:
+                row.update(name=DELETED_NAME, avatar=None)
+                changed = True
+        if changed:
+            pm.save(update_fields=["ranking", "updated_at"])
+
+    profile.full_name = DELETED_NAME
+    profile.phone = ""
+    profile.avatar = ""
+    profile.goal = ""
+    profile.birth_date = None
+    profile.sex = ""
+    profile.height_cm = None
+    profile.target_weight_kg = None
+    profile.coach_notes = ""
+    profile.show_in_podium = False
+    profile.share_achievements = False
+    profile.status = Profile.Status.BLOCKED
+    profile.save()
+
+    user.username = f"eliminada-{user.id}@cuenta.invalid"
+    user.email = ""
+    user.first_name = user.last_name = ""
+    user.is_active = False
+    user.set_unusable_password()
+    user.save()
