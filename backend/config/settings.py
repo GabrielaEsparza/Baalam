@@ -68,6 +68,13 @@ ASSETLINKS_SHA256 = [f.strip().upper() for f in os.environ.get("ASSETLINKS_SHA25
 
 # Dominio principal: "www." + este dominio redirige aquí.
 CANONICAL_HOSTS = [h for h in os.environ.get("CANONICAL_HOSTS", "baalamgym.com").split(",") if h]
+# Direcciones viejas que ya no se muestran: todo lo que llegue ahí redirige al dominio principal.
+LEGACY_HOSTS = [h for h in os.environ.get("LEGACY_HOSTS", "baalam-production.up.railway.app").split(",") if h]
+
+# "Continuar con Google" abre una ventana de Google que le responde a la app: con "same-origin"
+# esa respuesta se bloquea y el botón se queda cargando. El botón también necesita el origen.
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
@@ -148,7 +155,7 @@ if os.environ.get("BUCKET_NAME"):
 # Avisos al celular (Web Push). Llaves VAPID: python manage.py vapid_keys
 VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
 VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
-VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "https://baalam-production.up.railway.app")
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "https://baalamgym.com")
 
 # Sesión en cookie + CSRF (mismo dominio para React y API)
 # Enlaces para crear/recuperar contraseña: 7 días (la coach los manda por WhatsApp).
