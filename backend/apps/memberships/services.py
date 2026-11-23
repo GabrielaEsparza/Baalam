@@ -71,6 +71,11 @@ def register_payment(
     - Mismo plan y vigente el día del pago: +N meses desde el vencimiento anterior.
     - Vencida, sin membresía o cambio de plan: nueva membresía desde el día del pago.
     """
+    from apps.accounts.models import Profile
+    from apps.accounts.services import get_profile
+
+    if get_profile(member).role != Profile.Role.MEMBER:
+        raise ServiceError("Las coaches no pagan mensualidad.", "coach_not_member", 400)
     if not plan.active:
         raise ServiceError("Ese plan no está activo.")
     if amount_mxn <= 0:

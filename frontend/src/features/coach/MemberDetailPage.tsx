@@ -88,6 +88,7 @@ export default function MemberDetailPage() {
 
   if (isLoading) return <Spinner />;
   if (error || !m) return <ErrorBox error={error} onRetry={refetch} />;
+  const isMember = m.role === "member";
   const payments = m.payments as unknown as { id: number; amount_mxn: string; method: string; paid_at: string; note: string }[];
 
   return (
@@ -111,7 +112,17 @@ export default function MemberDetailPage() {
 
       {m.needs_access_link && <AccessCard memberId={id} name={m.full_name} phone={m.phone} initialLink={loc.state?.accessLink} />}
 
-      {/* Membresía */}
+      {!isMember && (
+        <Card className="flex items-start gap-3">
+          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-orchid" />
+          <p className="text-[15px]">
+            <b>Coach del equipo.</b> No paga mensualidad ni registra asistencia.
+          </p>
+        </Card>
+      )}
+
+      {/* Membresía (solo miembros: las coaches no pagan mensualidad) */}
+      {isMember && (
       <Card className="space-y-4">
         <div className="flex items-start justify-between">
           <div>
@@ -161,8 +172,9 @@ export default function MemberDetailPage() {
           )}
         </div>
       </Card>
+      )}
 
-      {m.includes_routine && m.role === "member" && (
+      {m.includes_routine && isMember && (
         <Link to={`/coach/rutinas/${id}`} className="mt-3 block">
           <Button variant="dark" full icon={ClipboardList}>
             Armar su rutina
@@ -180,7 +192,7 @@ export default function MemberDetailPage() {
         </Card>
       )}
 
-      {m.sessions_per_week !== null && (
+      {isMember && m.sessions_per_week !== null && (
         <>
           <SectionTitle>Días por semana</SectionTitle>
           <Card>
@@ -237,8 +249,8 @@ export default function MemberDetailPage() {
         )}
       </Card>
 
-      <SectionTitle>Últimas asistencias</SectionTitle>
-      {m.recent_checkins.length === 0 ? (
+      {isMember && <SectionTitle>Últimas asistencias</SectionTitle>}
+      {!isMember ? null : m.recent_checkins.length === 0 ? (
         <p className="text-[15px] text-ink-2">Sin asistencias todavía.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
@@ -250,7 +262,7 @@ export default function MemberDetailPage() {
         </div>
       )}
 
-      {isAdmin && (
+      {isAdmin && (isMember || payments.length > 0) && (
         <>
           <SectionTitle>Pagos</SectionTitle>
           {payments.length === 0 ? (
