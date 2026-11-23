@@ -117,6 +117,18 @@ export default function HomePage() {
         </Card>
       )}
 
+      {/* Nunca ha registrado peso/medidas */}
+      {h.measures_never && (
+        <Link to="/app/progreso" className="card flex items-center gap-3 border-gold bg-gold/15 hover:bg-gold/25">
+          <Ruler className="size-6 shrink-0 text-warning" strokeWidth={1.75} />
+          <div className="flex-1">
+            <p className="font-semibold">Registra tu peso y medidas</p>
+            <p className="text-sm text-ink-2">Así ves tu avance y se calcula tu meta de agua.</p>
+          </div>
+          <ChevronRight className="size-5 text-ink-2" />
+        </Link>
+      )}
+
       {/* Un mes sin registrar peso/medidas */}
       {h.measures_due_days != null && (
         <Link to="/app/progreso" className="card flex items-center gap-3 border-gold bg-gold/15 hover:bg-gold/25">

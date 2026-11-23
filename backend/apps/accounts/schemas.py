@@ -109,6 +109,7 @@ class HomeOut(Schema):
     whatsapp: str
     water: dict | None = None  # {ml, goal_ml}
     measures_due_days: int | None = None  # días sin registrar peso/medidas (≥ 30)
+    measures_never: bool = False  # nunca ha registrado peso ni medidas
 
 
 # ----- Coach -----

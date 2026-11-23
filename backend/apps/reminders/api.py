@@ -24,6 +24,7 @@ class PrefsIn(Schema):
     workout_hour: int | None = None
     classes: bool | None = None
     measures: bool | None = None
+    food: bool | None = None
 
 
 class WaterIn(Schema):

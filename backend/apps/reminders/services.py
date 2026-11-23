@@ -1,10 +1,12 @@
 """Avisos al celular (Web Push) y registro de agua.
 
 `run_due()` corre cada 10 minutos (hilo de gunicorn.conf.py) y decide qué avisos tocan:
-- clase/sesión reservada: ~1 hora antes
-- entrenamiento: a la hora elegida, si hoy toca rutina y aún no la registra
-- agua: cada 2 horas (10 a 20 h) mientras no llegue a su meta
-- medidas: cuando pasa un mes (y cada mes) sin registrar peso o medidas
+- agua: diario, cada 2 horas (10 a 20 h) mientras no llegue a su meta
+- comida: diario, 15 h si no registró desayuno/comida y 21 h si no registró la cena
+- entrenamiento: solo días de gym (L–V) con rutina, a la hora elegida, si aún no la registra
+- sesión reservada: ~1 hora antes (L–V)
+- viernes: si esa semana fue menos días de los que le tocan y hoy aún hay lugar en un horario
+- medidas: diario mientras nunca las haya registrado; después, cada mes sin actualizarlas
 Cada aviso se anota en SentReminder antes de enviarse, así nunca se repite.
 """
 import json
@@ -27,6 +29,10 @@ WATER_ML_PER_KG = 35
 WATER_DEFAULT_ML = 2000
 MEASURE_EVERY_DAYS = 30
 MEASURE_HOURS = (10, 13)  # ventana del día para ese aviso
+GYM_WEEKDAYS = (0, 1, 2, 3, 4)  # lunes a viernes (sábado y domingo cerrado)
+CATCHUP_WEEKDAY = 4  # viernes: último día para reponer la semana
+CATCHUP_HOURS = (8, 10)
+FOOD_SLOTS = {15: ("breakfast", "lunch"), 21: ("dinner",)}
 CLASS_LEAD_MIN = 70  # el aviso sale entre 70 y 0 minutos antes (revisión cada 10 min)
 WORKOUT_WINDOW_H = 2
 
@@ -48,13 +54,14 @@ def prefs_payload(user) -> dict:
         "workout_hour": p.workout_hour,
         "classes": p.classes,
         "measures": p.measures,
+        "food": p.food,
         "devices": PushSubscription.objects.filter(user=user).count(),
     }
 
 
 def update_prefs(user, **values) -> dict:
     p = prefs_for(user)
-    for k in ("water", "workout", "classes", "measures"):
+    for k in ("water", "workout", "classes", "measures", "food"):
         if values.get(k) is not None:
             setattr(p, k, bool(values[k]))
     if values.get("workout_hour") is not None:
@@ -165,18 +172,54 @@ def add_water(user, delta_ml: int) -> dict:
 
 # ---------------- Medidas ----------------
 
-def days_without_measures(user) -> int:
-    """Días desde el último registro de peso/medidas (o desde que se registró en la app)."""
+def _last_measure_date(user):
     from apps.progress.models import BodyLog
 
-    last = BodyLog.objects.filter(member=user).order_by("-date").values_list("date", flat=True).first()
-    since = last or user.date_joined.date()
-    return (today() - since).days
+    return BodyLog.objects.filter(member=user).order_by("-date").values_list("date", flat=True).first()
+
+
+def measures_never(user) -> bool:
+    """Nunca ha registrado peso ni medidas."""
+    return _last_measure_date(user) is None
 
 
 def measures_due(user) -> int | None:
-    d = days_without_measures(user)
+    """Días sin actualizar peso/medidas si ya pasó un mes (None si no toca o si nunca las registró)."""
+    last = _last_measure_date(user)
+    if last is None:
+        return None
+    d = (today() - last).days
     return d if d >= MEASURE_EVERY_DAYS else None
+
+
+def catchup_session(user, feats, at: datetime):
+    """Viernes: si esa semana fue menos días de los que le tocan y hoy aún hay lugar en un horario
+    de su plan (que no haya empezado), devuelve (sesión, días que le faltan). Si no, None."""
+    from django.db.models import Count, Q
+
+    from apps.checkin.models import CheckIn
+    from apps.common import week_bounds
+    from apps.memberships.services import current_membership
+    from apps.schedule.models import Booking, Schedule, Session
+
+    m = current_membership(user)
+    if not m or not m.sessions_per_week:
+        return None
+    start, _ = week_bounds(at.date())
+    attended = CheckIn.objects.filter(member=user, date__range=(start, at.date())).count()
+    if attended >= m.sessions_per_week:
+        return None
+    if Booking.objects.filter(member=user, session__date=at.date(), status__in=Booking.ACTIVE_STATUSES).exists():
+        return None  # ya tiene lugar hoy
+    types = [t for t, ok in ((Schedule.Type.OPEN_GYM, feats["open_gym"]), (Schedule.Type.CLASS, feats["classes"])) if ok]
+    sessions = (
+        Session.objects.filter(date=at.date(), cancelled=False, start_at__gt=at, schedule__type__in=types)
+        .select_related("schedule")
+        .annotate(taken=Count("bookings", filter=Q(bookings__status__in=Booking.ACTIVE_STATUSES)))
+        .order_by("start_at")
+    )
+    s = next((s for s in sessions if s.taken < s.capacity), None)
+    return (s, m.sessions_per_week - attended) if s else None
 
 
 # ---------------- Qué avisos tocan ----------------
@@ -201,11 +244,14 @@ def due_for(user, feats, at: datetime) -> list[tuple[str, str, dict]]:
     from apps.schedule.models import Booking
     from apps.training.services import today_workout_brief
 
+    from apps.nutrition.models import FoodLog
+
     p = prefs_for(user)
     t = at.date()
+    gym_day = t.weekday() in GYM_WEEKDAYS
     out = []
 
-    if p.classes:
+    if p.classes and gym_day:
         bookings = Booking.objects.select_related("session__schedule").filter(
             member=user,
             status=Booking.Status.BOOKED,
@@ -221,7 +267,25 @@ def due_for(user, feats, at: datetime) -> list[tuple[str, str, dict]]:
                 {"title": "Hoy tienes sesión 💪", "body": f"{b.session.schedule.name} a las {_fmt_hour(start)}. ¡Prepárate!", "url": "/app", "tag": f"class-{b.id}"},
             ))
 
-    if p.workout and feats["routine"] and p.workout_hour <= at.hour < p.workout_hour + WORKOUT_WINDOW_H:
+    if p.classes and t.weekday() == CATCHUP_WEEKDAY and CATCHUP_HOURS[0] <= at.hour < CATCHUP_HOURS[1]:
+        found = catchup_session(user, feats, at)
+        if found:
+            s, missing = found
+            start = s.start_at.astimezone(at.tzinfo)
+            days = "1 día" if missing == 1 else f"{missing} días"
+            year, week, _ = t.isocalendar()
+            out.append((
+                "catchup",
+                f"{year}-W{week}",
+                {
+                    "title": "¡Aún puedes completar tu semana!",
+                    "body": f"Te faltó {days} esta semana. Hoy hay lugar en {s.schedule.name} a las {_fmt_hour(start)}.",
+                    "url": "/app/horarios",
+                    "tag": "catchup",
+                },
+            ))
+
+    if p.workout and gym_day and feats["routine"] and p.workout_hour <= at.hour < p.workout_hour + WORKOUT_WINDOW_H:
         brief = today_workout_brief(user)
         if brief and brief["status"] == "planned":
             out.append((
@@ -241,7 +305,28 @@ def due_for(user, feats, at: datetime) -> list[tuple[str, str, dict]]:
                     {"title": "Hora de tomar agua 💧", "body": f"Llevas {w['ml']:,} de {w['goal_ml']:,} ml hoy.", "url": "/app", "tag": "water"},
                 ))
 
-    if p.measures and MEASURE_HOURS[0] <= at.hour < MEASURE_HOURS[1]:
+    if p.food:
+        for hour, meals in FOOD_SLOTS.items():
+            if hour <= at.hour < hour + 1 and not FoodLog.objects.filter(member=user, date=t, meal__in=meals).exists():
+                what = "tu desayuno y tu comida" if hour == 15 else "tu cena"
+                out.append((
+                    "food",
+                    f"{t.isoformat()}:{hour}",
+                    {"title": "Registra lo que comiste 🍽️", "body": f"Aún no registras {what} de hoy.", "url": "/app/nutricion", "tag": "food"},
+                ))
+
+    if p.measures and MEASURE_HOURS[0] <= at.hour < MEASURE_HOURS[1] and measures_never(user):
+        out.append((
+            "measures",
+            f"never:{t.isoformat()}",
+            {
+                "title": "Registra tu peso y medidas 📏",
+                "body": "Anótalas una vez para ver tu avance y calcular tu meta de agua y tus calorías.",
+                "url": "/app/progreso",
+                "tag": "measures",
+            },
+        ))
+    elif p.measures and MEASURE_HOURS[0] <= at.hour < MEASURE_HOURS[1]:
         d = measures_due(user)
         if d is not None:
             out.append((

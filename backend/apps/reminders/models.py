@@ -27,6 +27,7 @@ class ReminderPrefs(models.Model):
     workout_hour = models.PositiveSmallIntegerField(default=19, help_text="Hora del aviso si no ha registrado su entrenamiento")
     classes = models.BooleanField(default=True)
     measures = models.BooleanField(default=True)
+    food = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = "preferencias de avisos"

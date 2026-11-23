@@ -210,7 +210,7 @@ def home(request):
     from apps.memberships.models import GymSettings
     from apps.schedule.models import Booking
     from apps.schedule.services import missing_days_this_week
-    from apps.reminders.services import measures_due, water_today
+    from apps.reminders.services import measures_due, measures_never, water_today
     from apps.training.services import today_workout_brief
 
     user, t = request.user, today()
@@ -247,6 +247,7 @@ def home(request):
         "whatsapp": GymSettings.load().whatsapp,
         "water": water_today(user) if feats["access"] else None,
         "measures_due_days": measures_due(user) if feats["access"] else None,
+        "measures_never": measures_never(user) if feats["access"] else False,
     }
 
 

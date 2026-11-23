@@ -14,9 +14,10 @@ type Prefs = {
   workout_hour: number;
   classes: boolean;
   measures: boolean;
+  food: boolean;
   devices: number;
 };
-type Draft = Pick<Prefs, "water" | "water_goal_ml" | "workout" | "workout_hour" | "classes" | "measures">;
+type Draft = Pick<Prefs, "water" | "water_goal_ml" | "workout" | "workout_hour" | "classes" | "measures" | "food">;
 const KEY = ["me", "reminders"];
 const HOURS = Array.from({ length: 18 }, (_, i) => i + 5); // 5 a 22 h
 const fmtHour = (h: number) => `${h % 12 || 12}:00 ${h < 12 ? "am" : "pm"}`;
@@ -27,6 +28,7 @@ const toDraft = (p: Prefs): Draft => ({
   workout_hour: p.workout_hour,
   classes: p.classes,
   measures: p.measures,
+  food: p.food,
 });
 const sameDraft = (a: Draft, b: Draft) => (Object.keys(a) as (keyof Draft)[]).every((k) => a[k] === b[k]);
 
@@ -108,8 +110,8 @@ export function RemindersCard() {
   const set = (patch: Partial<Draft>) => setDraft({ ...d, ...patch });
   const dirty = !sameDraft(d, toDraft(p));
   const goal = d.water_goal_ml ?? p.water_goal_auto_ml;
-  const activeCount = [p.water, p.workout, p.classes, p.measures].filter(Boolean).length;
-  const summary = on ? `Activados en este celular · ${activeCount} de 4 avisos` : "Desactivados en este celular";
+  const activeCount = [p.water, p.food, p.workout, p.classes, p.measures].filter(Boolean).length;
+  const summary = on ? `Activados en este celular · ${activeCount} de 5 avisos` : "Desactivados en este celular";
 
   return (
     <Card className="mt-6 scroll-mt-20 p-0" id="avisos">
@@ -168,8 +170,19 @@ export function RemindersCard() {
           )}
 
           <div className="divide-y divide-line">
-            <Switch label="💧 Tomar agua (cada 2 horas)" checked={d.water} onChange={(v) => set({ water: v })} />
-            <Switch label="🏋️ Si no has registrado tu entrenamiento" checked={d.workout} onChange={(v) => set({ workout: v })} />
+            <Pref label="💧 Tomar agua" hint="Cada 2 horas, hasta llegar a tu meta" checked={d.water} onChange={(v) => set({ water: v })} />
+            <Pref
+              label="🍽️ Registrar mis comidas"
+              hint="3 p. m. si falta desayuno o comida · 9 p. m. si falta la cena"
+              checked={d.food}
+              onChange={(v) => set({ food: v })}
+            />
+            <Pref
+              label="🏋️ Si no has registrado tu entrenamiento"
+              hint="Solo de lunes a viernes, los días que tienes rutina"
+              checked={d.workout}
+              onChange={(v) => set({ workout: v })}
+            />
             {d.workout && (
               <label className="flex min-h-12 items-center justify-between gap-4 pb-2">
                 <span className="text-[15px] text-ink-2">Avisarme a las</span>
@@ -186,8 +199,18 @@ export function RemindersCard() {
                 </select>
               </label>
             )}
-            <Switch label="📅 1 hora antes de mi sesión reservada" checked={d.classes} onChange={(v) => set({ classes: v })} />
-            <Switch label="📏 Cada mes, actualizar peso y medidas" checked={d.measures} onChange={(v) => set({ measures: v })} />
+            <Pref
+              label="📅 Mis sesiones"
+              hint="1 hora antes · y el viernes, si te faltó un día y aún hay lugar"
+              checked={d.classes}
+              onChange={(v) => set({ classes: v })}
+            />
+            <Pref
+              label="📏 Peso y medidas"
+              hint="Diario hasta que las registres; después, cada mes"
+              checked={d.measures}
+              onChange={(v) => set({ measures: v })}
+            />
           </div>
 
           <div>
@@ -224,5 +247,15 @@ export function RemindersCard() {
         </div>
       )}
     </Card>
+  );
+}
+
+/** Interruptor con una línea de explicación (cuándo llega el aviso). */
+function Pref({ label, hint, checked, onChange }: { label: string; hint: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="py-1">
+      <Switch label={label} checked={checked} onChange={onChange} />
+      <p className="-mt-2 pb-2 pr-16 text-sm text-ink-2">{hint}</p>
+    </div>
   );
 }

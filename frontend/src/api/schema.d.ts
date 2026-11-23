@@ -1791,6 +1791,11 @@ export interface components {
             } | null;
             /** Measures Due Days */
             measures_due_days?: number | null;
+            /**
+             * Measures Never
+             * @default false
+             */
+            measures_never: boolean;
         };
         /** SessionBrief */
         SessionBrief: {
@@ -2222,6 +2227,8 @@ export interface components {
             classes?: boolean | null;
             /** Measures */
             measures?: boolean | null;
+            /** Food */
+            food?: boolean | null;
         };
         /** WaterIn */
         WaterIn: {

@@ -4659,6 +4659,11 @@
        }
       ],
       "title": "Measures Due Days"
+     },
+     "measures_never": {
+      "default": false,
+      "title": "Measures Never",
+      "type": "boolean"
      }
     },
     "required": [
@@ -6154,6 +6159,17 @@
        }
       ],
       "title": "Measures"
+     },
+     "food": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Food"
      }
     },
     "title": "PrefsIn",
