@@ -3,6 +3,7 @@
 Tareas nocturnas sin un servicio cron aparte: el proceso maestro de Gunicorn tiene un hilo
 que lanza `manage.py nightly` como PROCESO APARTE todos los días a las 02:00 (hora del gym),
 y una vez al arrancar por si la app estuvo apagada a esa hora. `nightly` es idempotente.
+Otro hilo lanza `manage.py reminders` cada 10 minutos (avisos al celular; tampoco se repiten).
 
 Importante: el hilo NO importa Django. Gunicorn crea los procesos de trabajo con fork(); si en
 ese momento otro hilo del maestro está a medio importar módulos, los trabajadores nacen con
@@ -20,21 +21,23 @@ from zoneinfo import ZoneInfo
 import encodings.idna  # noqa: F401  # cargado antes de fork(): lo usa Django al leer el Host
 
 RUN_AT_HOUR = 2
+REMINDERS_EVERY_S = 600  # avisos al celular: revisar cada 10 minutos
 TZ = ZoneInfo(os.environ.get("TIME_ZONE", "America/Mexico_City"))
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def _run(log, reason):
+def _run(log, reason, command="nightly", timeout=1800, quiet=False):
     try:
         r = subprocess.run(
-            [sys.executable, "manage.py", "nightly"], cwd=HERE, capture_output=True, text=True, timeout=1800
+            [sys.executable, "manage.py", command], cwd=HERE, capture_output=True, text=True, timeout=timeout
         )
         if r.returncode == 0:
-            log.info("nightly ok (%s)", reason)
+            if not quiet:
+                log.info("%s ok (%s)", command, reason)
         else:
-            log.error("nightly falló (%s): %s", reason, (r.stderr or r.stdout)[-2000:])
+            log.error("%s falló (%s): %s", command, reason, (r.stderr or r.stdout)[-2000:])
     except Exception:  # noqa: BLE001
-        log.exception("nightly no se pudo lanzar (%s)", reason)
+        log.exception("%s no se pudo lanzar (%s)", command, reason)
 
 
 def _loop(log):
@@ -49,6 +52,15 @@ def _loop(log):
         _run(log, "programado")
 
 
+def _reminders_loop(log):
+    time.sleep(60)
+    while True:
+        started = time.monotonic()
+        _run(log, "cada 10 min", command="reminders", timeout=300, quiet=True)
+        time.sleep(max(30, REMINDERS_EVERY_S - (time.monotonic() - started)))
+
+
 def when_ready(server):
     if os.environ.get("NIGHTLY_IN_WEB", "1") == "1":
         threading.Thread(target=_loop, args=(server.log,), daemon=True, name="nightly").start()
+        threading.Thread(target=_reminders_loop, args=(server.log,), daemon=True, name="reminders").start()

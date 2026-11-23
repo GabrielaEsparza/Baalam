@@ -25,6 +25,7 @@ from apps.progress.api import router as progress_router  # noqa: E402
 from apps.schedule.api import router as schedule_router, coach_router as coach_sched_router  # noqa: E402
 from apps.training.api import router as training_router, coach_router as coach_training_router  # noqa: E402
 from apps.nutrition.api import router as nutrition_router, coach_router as coach_nutrition_router  # noqa: E402
+from apps.reminders.api import router as reminders_router  # noqa: E402
 
 api.add_router("/auth", auth_router)
 api.add_router("", me_router)
@@ -36,6 +37,7 @@ api.add_router("", podium_router)
 api.add_router("", community_router)
 api.add_router("", training_router)
 api.add_router("", nutrition_router)
+api.add_router("", reminders_router)
 api.add_router("/coach", coach_members_router)
 api.add_router("/coach", coach_pay_router)
 api.add_router("/coach", coach_sched_router)

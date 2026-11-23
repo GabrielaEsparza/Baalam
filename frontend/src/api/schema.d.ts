@@ -733,6 +733,113 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/push/key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Push Key
+         * @description Llave pública para suscribirse a los avisos (vacía si los avisos no están configurados).
+         */
+        get: operations["apps_reminders_api_push_key"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/push/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Push Subscribe */
+        post: operations["apps_reminders_api_push_subscribe"];
+        /** Push Unsubscribe */
+        delete: operations["apps_reminders_api_push_unsubscribe"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/push/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Push Test */
+        post: operations["apps_reminders_api_push_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Prefs */
+        get: operations["apps_reminders_api_get_prefs"];
+        /** Put Prefs */
+        put: operations["apps_reminders_api_put_prefs"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/water/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Water */
+        get: operations["apps_reminders_api_water"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/water": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Water */
+        post: operations["apps_reminders_api_add_water"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/coach/members": {
         parameters: {
             query?: never;
@@ -1678,6 +1785,12 @@ export interface components {
             birthdays: components["schemas"]["BirthdayOut"][];
             /** Whatsapp */
             whatsapp: string;
+            /** Water */
+            water?: {
+                [key: string]: unknown;
+            } | null;
+            /** Measures Due Days */
+            measures_due_days?: number | null;
         };
         /** SessionBrief */
         SessionBrief: {
@@ -2075,6 +2188,45 @@ export interface components {
             carbs_g?: number | null;
             /** Fat G */
             fat_g?: number | null;
+        };
+        /** SubscriptionIn */
+        SubscriptionIn: {
+            /** Endpoint */
+            endpoint: string;
+            /** P256Dh */
+            p256dh: string;
+            /** Auth */
+            auth: string;
+        };
+        /** EndpointIn */
+        EndpointIn: {
+            /** Endpoint */
+            endpoint: string;
+        };
+        /** PrefsIn */
+        PrefsIn: {
+            /** Water */
+            water?: boolean | null;
+            /** Water Goal Ml */
+            water_goal_ml?: number | null;
+            /**
+             * Water Goal Auto
+             * @default false
+             */
+            water_goal_auto: boolean;
+            /** Workout */
+            workout?: boolean | null;
+            /** Workout Hour */
+            workout_hour?: number | null;
+            /** Classes */
+            classes?: boolean | null;
+            /** Measures */
+            measures?: boolean | null;
+        };
+        /** WaterIn */
+        WaterIn: {
+            /** Delta Ml */
+            delta_ml: number;
         };
         /** MemberRow */
         MemberRow: {
@@ -3627,6 +3779,198 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["GoalIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_reminders_api_push_key: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_reminders_api_push_subscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscriptionIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_reminders_api_push_unsubscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndpointIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_reminders_api_push_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_reminders_api_get_prefs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_reminders_api_put_prefs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrefsIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_reminders_api_water: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_reminders_api_add_water: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WaterIn"];
             };
         };
         responses: {

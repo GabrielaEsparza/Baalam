@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarPlus, CheckCircle2, ChevronRight, Dumbbell, Megaphone, Pin, QrCode } from "lucide-react";
+import { CalendarPlus, CheckCircle2, ChevronRight, Dumbbell, Megaphone, Pin, QrCode, Ruler } from "lucide-react";
 import { BirthdayToast } from "./BirthdayToast";
+import { WaterCard } from "./WaterCard";
 import { api, unwrap } from "@/api/client";
 import { useMe } from "@/app/session";
 import { Avatar } from "@/components/Avatar";
@@ -115,6 +116,23 @@ export default function HomePage() {
           </Link>
         </Card>
       )}
+
+      {/* Un mes sin registrar peso/medidas */}
+      {h.measures_due_days != null && (
+        <Link to="/app/progreso" className="card flex items-center gap-3 border-gold bg-gold/15 hover:bg-gold/25">
+          <Ruler className="size-6 shrink-0 text-warning" strokeWidth={1.75} />
+          <div className="flex-1">
+            <p className="font-semibold">Actualiza tu peso y medidas</p>
+            <p className="text-sm text-ink-2">
+              {h.measures_due_days >= 60 ? `Hace ${Math.floor(h.measures_due_days / 30)} meses` : "Hace más de un mes"} que no las registras.
+            </p>
+          </div>
+          <ChevronRight className="size-5 text-ink-2" />
+        </Link>
+      )}
+
+      {/* Agua del día */}
+      {h.water && <WaterCard water={h.water as { ml: number; goal_ml: number }} />}
 
       {/* Racha de la semana */}
       <Card>

@@ -8,6 +8,7 @@ import { applyTheme, useMe, useSetMe } from "@/app/session";
 import { Button, Card, Field, Input, PageTitle, SectionTitle, Switch, Tabs } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { useLogout } from "@/features/auth/useLogout";
+import { RemindersCard } from "./RemindersCard";
 
 type Patch = Partial<Pick<Me, "full_name" | "phone" | "goal" | "greeting" | "theme" | "show_in_podium" | "share_achievements" | "sex">> & {
   height_cm?: string | null;
@@ -192,6 +193,13 @@ export default function ProfilePage() {
           <Switch label="Aparecer en el podio público" checked={me.show_in_podium} onChange={(v) => save({ show_in_podium: v }, true)} />
         )}
       </Card>
+
+      {!me.features.coach && me.features.access && (
+        <>
+          <SectionTitle>Avisos</SectionTitle>
+          <RemindersCard />
+        </>
+      )}
 
       <Button variant="danger" full className="mt-6" onClick={logout}>
         Cerrar sesión

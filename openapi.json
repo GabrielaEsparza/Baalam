@@ -1732,6 +1732,270 @@
     ]
    }
   },
+  "/api/push/key": {
+   "get": {
+    "operationId": "apps_reminders_api_push_key",
+    "summary": "Push Key",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "description": "Llave pública para suscribirse a los avisos (vacía si los avisos no están configurados).",
+    "tags": [
+     "avisos y agua"
+    ]
+   }
+  },
+  "/api/push/subscriptions": {
+   "post": {
+    "operationId": "apps_reminders_api_push_subscribe",
+    "summary": "Push Subscribe",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "avisos y agua"
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SubscriptionIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   },
+   "delete": {
+    "operationId": "apps_reminders_api_push_unsubscribe",
+    "summary": "Push Unsubscribe",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "avisos y agua"
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EndpointIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
+  "/api/push/test": {
+   "post": {
+    "operationId": "apps_reminders_api_push_test",
+    "summary": "Push Test",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "avisos y agua"
+    ],
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
+  "/api/me/reminders": {
+   "get": {
+    "operationId": "apps_reminders_api_get_prefs",
+    "summary": "Get Prefs",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "avisos y agua"
+    ],
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   },
+   "put": {
+    "operationId": "apps_reminders_api_put_prefs",
+    "summary": "Put Prefs",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "avisos y agua"
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PrefsIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
+  "/api/water/today": {
+   "get": {
+    "operationId": "apps_reminders_api_water",
+    "summary": "Water",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "avisos y agua"
+    ],
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
+  "/api/water": {
+   "post": {
+    "operationId": "apps_reminders_api_add_water",
+    "summary": "Add Water",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "avisos y agua"
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WaterIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
   "/api/coach/members": {
    "get": {
     "operationId": "apps_accounts_api_members",
@@ -4372,6 +4636,29 @@
      "whatsapp": {
       "title": "Whatsapp",
       "type": "string"
+     },
+     "water": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Water"
+     },
+     "measures_due_days": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Measures Due Days"
      }
     },
     "required": [
@@ -5757,6 +6044,132 @@
      }
     },
     "title": "GoalIn",
+    "type": "object"
+   },
+   "SubscriptionIn": {
+    "properties": {
+     "endpoint": {
+      "title": "Endpoint",
+      "type": "string"
+     },
+     "p256dh": {
+      "title": "P256Dh",
+      "type": "string"
+     },
+     "auth": {
+      "title": "Auth",
+      "type": "string"
+     }
+    },
+    "required": [
+     "endpoint",
+     "p256dh",
+     "auth"
+    ],
+    "title": "SubscriptionIn",
+    "type": "object"
+   },
+   "EndpointIn": {
+    "properties": {
+     "endpoint": {
+      "title": "Endpoint",
+      "type": "string"
+     }
+    },
+    "required": [
+     "endpoint"
+    ],
+    "title": "EndpointIn",
+    "type": "object"
+   },
+   "PrefsIn": {
+    "properties": {
+     "water": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Water"
+     },
+     "water_goal_ml": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Water Goal Ml"
+     },
+     "water_goal_auto": {
+      "default": false,
+      "title": "Water Goal Auto",
+      "type": "boolean"
+     },
+     "workout": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Workout"
+     },
+     "workout_hour": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Workout Hour"
+     },
+     "classes": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Classes"
+     },
+     "measures": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Measures"
+     }
+    },
+    "title": "PrefsIn",
+    "type": "object"
+   },
+   "WaterIn": {
+    "properties": {
+     "delta_ml": {
+      "title": "Delta Ml",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "delta_ml"
+    ],
+    "title": "WaterIn",
     "type": "object"
    },
    "MemberRow": {

@@ -38,6 +38,7 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//, /^\/admin\//, /^\/media\//],
         globPatterns: ["**/*.{js,css,html,png,webp,svg}"],
         cleanupOutdatedCaches: true,
+        importScripts: ["/push-sw.js"], // avisos al celular
         clientsClaim: true,
         skipWaiting: true,
       },

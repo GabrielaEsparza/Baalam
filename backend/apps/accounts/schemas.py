@@ -107,6 +107,8 @@ class HomeOut(Schema):
     announcements: list[AnnouncementOut]
     birthdays: list["BirthdayOut"]
     whatsapp: str
+    water: dict | None = None  # {ml, goal_ml}
+    measures_due_days: int | None = None  # días sin registrar peso/medidas (≥ 30)
 
 
 # ----- Coach -----

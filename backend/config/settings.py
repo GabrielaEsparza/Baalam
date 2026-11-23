@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "apps.community",
     "apps.nutrition",
     "apps.files",
+    "apps.reminders",
 ]
 
 MIDDLEWARE = [
@@ -131,6 +132,11 @@ if os.environ.get("BUCKET_NAME"):
             "file_overwrite": False,
         },
     }
+
+# Avisos al celular (Web Push). Llaves VAPID: python manage.py vapid_keys
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "https://baalam-production.up.railway.app")
 
 # Sesión en cookie + CSRF (mismo dominio para React y API)
 # Enlaces para crear/recuperar contraseña: 7 días (la coach los manda por WhatsApp).
