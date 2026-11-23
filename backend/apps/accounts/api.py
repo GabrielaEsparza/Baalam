@@ -341,6 +341,10 @@ def member_detail(request, member_id: int):
         "membership_id": m.id if m else None,
         "start_date": m.start_date if m else None,
         "has_password": p.user.has_usable_password(),
+        # Sin contraseña y nunca ha entrado: la coach le manda su enlace de acceso.
+        # Sin contraseña pero ya entró: entra con Google (no necesita enlace).
+        "needs_access_link": not p.user.has_usable_password() and p.user.last_login is None,
+        "uses_google": not p.user.has_usable_password() and p.user.last_login is not None,
         "payments": (
             list(p.user.payments.values("id", "amount_mxn", "method", "paid_at", "note")[:24]) if pays else []
         ),

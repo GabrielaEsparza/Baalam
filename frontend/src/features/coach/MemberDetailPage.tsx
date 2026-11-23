@@ -99,6 +99,7 @@ export default function MemberDetailPage() {
         <div className="min-w-0">
           <h1 className="t-h2 truncate text-orchid">{m.full_name}</h1>
           <p className="truncate text-[15px] text-ink-2">{m.email}</p>
+          {m.uses_google && <p className="text-sm font-medium text-ink-2">Entra con Google</p>}
           {m.phone && (
             <a href={waLink(m.phone.length === 10 ? `52${m.phone}` : m.phone, "")} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[15px] font-semibold text-orchid">
               <MessageCircle className="size-4" /> {m.phone}
@@ -107,7 +108,7 @@ export default function MemberDetailPage() {
         </div>
       </div>
 
-      {!m.has_password && <AccessCard memberId={id} name={m.full_name} phone={m.phone} initialLink={loc.state?.accessLink} />}
+      {m.needs_access_link && <AccessCard memberId={id} name={m.full_name} phone={m.phone} initialLink={loc.state?.accessLink} />}
 
       {/* Membresía */}
       <Card className="space-y-4">

@@ -2377,6 +2377,16 @@ export interface components {
              * @default true
              */
             has_password: boolean;
+            /**
+             * Needs Access Link
+             * @default false
+             */
+            needs_access_link: boolean;
+            /**
+             * Uses Google
+             * @default false
+             */
+            uses_google: boolean;
             /** Payments */
             payments: {
                 [key: string]: unknown;

@@ -6540,6 +6540,16 @@
       "title": "Has Password",
       "type": "boolean"
      },
+     "needs_access_link": {
+      "default": false,
+      "title": "Needs Access Link",
+      "type": "boolean"
+     },
+     "uses_google": {
+      "default": false,
+      "title": "Uses Google",
+      "type": "boolean"
+     },
      "payments": {
       "items": {
        "additionalProperties": true,

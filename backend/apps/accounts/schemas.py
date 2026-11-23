@@ -136,6 +136,8 @@ class MemberDetail(MemberRow):
     membership_id: int | None
     start_date: date | None = None
     has_password: bool = True
+    needs_access_link: bool = False
+    uses_google: bool = False
     payments: list[dict]
     recent_checkins: list[datetime]
 

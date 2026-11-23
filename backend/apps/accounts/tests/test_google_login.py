@@ -36,6 +36,20 @@ class GoogleLoginTests(TestCase):
         self.assertEqual(r.json()["full_name"], "Rosa López")  # no se pisa su nombre
         self.assertEqual(User.objects.filter(username="rosa@gmail.com").count(), 1)
 
+    def test_coach_sees_google_user_without_access_link(self):
+        from apps.accounts.services import set_role
+        from apps.memberships.tests.test_services import make_member
+
+        pending = coach_create_member(full_name="Sin entrar", email="pendiente@gmail.com")
+        uid = self.post(google("conGoogle@gmail.com")).json()["id"]
+        coach = make_member("coach@t.mx")
+        set_role(coach, "coach")
+        self.client.force_login(coach)
+        d = self.client.get(f"/api/coach/members/{uid}").json()
+        self.assertEqual((d["needs_access_link"], d["uses_google"]), (False, True))
+        d = self.client.get(f"/api/coach/members/{pending.id}").json()
+        self.assertEqual((d["needs_access_link"], d["uses_google"]), (True, False))
+
     def test_unverified_email_or_bad_token_rejected(self):
         self.assertEqual(self.post(google(verified=False)).status_code, 401)
         with mock.patch("google.oauth2.id_token.verify_oauth2_token", side_effect=ValueError("bad")):
