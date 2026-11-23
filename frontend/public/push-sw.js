@@ -10,6 +10,7 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(d.title || "BÁALAM GYM", {
       body: d.body || "",
       icon: "/icon-192.png",
+      badge: "/icon-monochrome.png", // ícono pequeño de la barra de estado: silueta blanca
       tag: d.tag || undefined,
       renotify: !!d.tag,
       data: { url: d.url || "/app" },
