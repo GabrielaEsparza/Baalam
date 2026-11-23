@@ -198,6 +198,10 @@ export function RemindersCard() {
             </Button>
           )}
 
+          <p className="text-xs text-ink-2">
+            {nativeApp ? "Avisos de la app (nativos)" : isAndroidApp() ? "App de Android · ábrela de nuevo para activar los avisos nativos" : "Avisos del navegador"}
+          </p>
+
           <div className="divide-y divide-line">
             <Pref label="💧 Tomar agua" hint="Cada 2 horas, hasta llegar a tu meta" checked={d.water} onChange={(v) => set({ water: v })} />
             <Pref
