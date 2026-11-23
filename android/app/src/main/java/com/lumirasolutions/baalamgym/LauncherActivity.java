@@ -1,11 +1,11 @@
 /*
- * Copyright 2020 Google Inc.
+ * Copyright 2020 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,13 +20,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
-
-
 public class LauncherActivity
         extends com.google.androidbrowserhelper.trusted.LauncherActivity {
-    
-
-    
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,11 +39,14 @@ public class LauncherActivity
 
     @Override
     protected Uri getLaunchingUrl() {
-        // Get the original launch Url.
+        // Get the original launch Url (o la del aviso que se tocó).
         Uri uri = super.getLaunchingUrl();
-
-        
-
-        return uri;
+        // Le avisa a la web que corre dentro de la app y le pasa el identificador de Firebase,
+        // para que los avisos lleguen como notificación nativa de la app.
+        if (uri == null || !getString(R.string.hostName).equals(uri.getHost())) return uri;
+        Uri.Builder b = uri.buildUpon().appendQueryParameter("twa", "1");
+        String token = FcmService.token(this);
+        if (token != null) b.appendQueryParameter("fcm_token", token);
+        return b.build();
     }
 }
