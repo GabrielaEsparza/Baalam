@@ -21,8 +21,8 @@
     "path": "C:/Users/multi/Documents/BAALAM-firma-android/baalam-upload.jks",
     "alias": "baalam"
   },
-  "appVersionName": "1.0.1",
-  "appVersionCode": 2,
+  "appVersionName": "1.0.2",
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://baalamgym.com/manifest.webmanifest",
@@ -39,5 +39,6 @@
   "fingerprints": [],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
-  "appVersion": "1.0.1"
+  "appVersion": "1.0.2",
+  "monochromeIconUrl": "https://baalamgym.com/icon-monochrome.png"
 }
