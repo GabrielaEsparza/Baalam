@@ -258,7 +258,7 @@ def delete_account(user, password: str = "") -> None:
     from apps.nutrition.models import FavoriteFood, FoodLog, NutritionGoal, QuickHide
     from apps.podium.models import PodiumMonth, PointsLedger
     from apps.progress.models import BodyLog, ProgressPhoto
-    from apps.reminders.models import PushSubscription, ReminderPrefs, SentReminder, WaterLog
+    from apps.reminders.models import FcmDevice, PushSubscription, ReminderPrefs, SentReminder, WaterLog
     from apps.schedule.models import WaitlistEntry
     from apps.training.models import DaySwap, RoutineTemplate, ScheduledWorkout, WorkoutSession
 
@@ -275,7 +275,7 @@ def delete_account(user, password: str = "") -> None:
     for model, field in (
         (BodyLog, "member"), (ProgressPhoto, "member"), (FoodLog, "member"), (FavoriteFood, "member"),
         (QuickHide, "member"), (NutritionGoal, "member"), (WaterLog, "member"), (PushSubscription, "user"),
-        (ReminderPrefs, "user"), (SentReminder, "user"), (PointsLedger, "member"), (DaySwap, "member"),
+        (ReminderPrefs, "user"), (SentReminder, "user"), (FcmDevice, "user"), (PointsLedger, "member"), (DaySwap, "member"),
         (WorkoutSession, "member"), (ScheduledWorkout, "member"), (RoutineTemplate, "member"),
         (MembershipRequest, "member"), (WaitlistEntry, "member"),
     ):

@@ -49,6 +49,22 @@ def push_unsubscribe(request, data: EndpointIn):
     return {"ok": True}
 
 
+class FcmIn(Schema):
+    token: str
+
+
+@router.post("/push/fcm", response=dict)
+def fcm_register(request, data: FcmIn):
+    """La app de Android registra su identificador de Firebase para esta cuenta."""
+    return {"devices": services.register_fcm(request.user, data.token)}
+
+
+@router.delete("/push/fcm", response=dict)
+def fcm_unregister(request, data: FcmIn):
+    services.unregister_fcm(request.user, data.token)
+    return {"ok": True}
+
+
 @router.post("/push/test", response=dict)
 def push_test(request):
     n = services.send(request.user, title="BÁALAM GYM", body="¡Listo! Así se verán tus avisos. 💪", tag="test")

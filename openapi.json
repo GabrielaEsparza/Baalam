@@ -1906,6 +1906,83 @@
     ]
    }
   },
+  "/api/push/fcm": {
+   "post": {
+    "operationId": "apps_reminders_api_fcm_register",
+    "summary": "Fcm Register",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "description": "La app de Android registra su identificador de Firebase para esta cuenta.",
+    "tags": [
+     "avisos y agua"
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FcmIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   },
+   "delete": {
+    "operationId": "apps_reminders_api_fcm_unregister",
+    "summary": "Fcm Unregister",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "avisos y agua"
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FcmIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
   "/api/push/test": {
    "post": {
     "operationId": "apps_reminders_api_push_test",
@@ -6198,6 +6275,19 @@
      "endpoint"
     ],
     "title": "EndpointIn",
+    "type": "object"
+   },
+   "FcmIn": {
+    "properties": {
+     "token": {
+      "title": "Token",
+      "type": "string"
+     }
+    },
+    "required": [
+     "token"
+    ],
+    "title": "FcmIn",
     "type": "object"
    },
    "PrefsIn": {

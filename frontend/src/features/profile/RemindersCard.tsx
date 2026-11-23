@@ -5,6 +5,8 @@ import { api, unwrap } from "@/api/client";
 import { Button, Card, Stepper, Switch, cx } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { currentSubscription, disablePush, enablePush, isIOS, isStandalone, pushSupported } from "@/lib/push";
+import { disableFcm, fcmOn, fcmToken, isAndroidApp, syncFcm } from "@/lib/twa";
+import { useMe } from "@/app/session";
 
 type Prefs = {
   water: boolean;
@@ -45,15 +47,22 @@ export function RemindersCard() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [on, setOn] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
-  const supported = pushSupported();
+  const { data: me } = useMe();
+  // En la app de Android (Play Store) los avisos van por Firebase, como app nativa.
+  const nativeApp = isAndroidApp() && !!fcmToken();
+  const supported = nativeApp || pushSupported();
   const iosBrowser = isIOS() && !isStandalone();
   const denied = supported && Notification.permission === "denied";
 
   useEffect(() => {
+    if (nativeApp) {
+      setOn(fcmOn() && Notification.permission === "granted");
+      return;
+    }
     currentSubscription()
       .then((s) => setOn(!!s && Notification.permission === "granted"))
       .catch(() => setOn(false));
-  }, []);
+  }, [nativeApp]);
 
   // Al abrir, el borrador parte de lo guardado; al cerrar sin guardar, se descarta.
   // (Si los datos se recargan con el desplegable abierto, no se pisan los cambios.)
@@ -84,6 +93,26 @@ export function RemindersCard() {
   async function toggle() {
     setBusy(true);
     try {
+      if (nativeApp) {
+        if (on) {
+          await disableFcm();
+          setOn(false);
+          toast("Avisos desactivados en este celular");
+        } else {
+          // El permiso lo concede la app (Android lo pide una vez); luego se registra en Firebase.
+          const perm = await Notification.requestPermission();
+          if (perm !== "granted") {
+            toast("No diste permiso para avisos. Puedes activarlo en los ajustes del celular.", "error");
+            return;
+          }
+          await syncFcm(me!.id, true);
+          await disablePush().catch(() => {}); // sin avisos web repetidos en este celular
+          setOn(true);
+          toast("¡Avisos activados!");
+          await unwrap(api.POST("/api/push/test")).catch(() => {});
+        }
+        return;
+      }
       if (on) {
         await disablePush();
         setOn(false);

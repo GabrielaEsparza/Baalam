@@ -811,6 +811,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/push/fcm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fcm Register
+         * @description La app de Android registra su identificador de Firebase para esta cuenta.
+         */
+        post: operations["apps_reminders_api_fcm_register"];
+        /** Fcm Unregister */
+        delete: operations["apps_reminders_api_fcm_unregister"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/push/test": {
         parameters: {
             query?: never;
@@ -2267,6 +2288,11 @@ export interface components {
         EndpointIn: {
             /** Endpoint */
             endpoint: string;
+        };
+        /** FcmIn */
+        FcmIn: {
+            /** Token */
+            token: string;
         };
         /** PrefsIn */
         PrefsIn: {
@@ -3980,6 +4006,58 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["EndpointIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_reminders_api_fcm_register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FcmIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_reminders_api_fcm_unregister: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FcmIn"];
             };
         };
         responses: {

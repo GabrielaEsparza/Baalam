@@ -20,7 +20,7 @@ from django.db import IntegrityError, transaction
 from apps.accounts.services import ServiceError
 from apps.common import now, today
 
-from .models import PushSubscription, ReminderPrefs, SentReminder, WaterLog
+from .models import FcmDevice, PushSubscription, ReminderPrefs, SentReminder, WaterLog
 
 log = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def prefs_payload(user) -> dict:
         "classes": p.classes,
         "measures": p.measures,
         "food": p.food,
-        "devices": PushSubscription.objects.filter(user=user).count(),
+        "devices": PushSubscription.objects.filter(user=user).count() + FcmDevice.objects.filter(user=user).count(),
     }
 
 
@@ -95,14 +95,94 @@ def push_enabled() -> bool:
     return bool(settings.VAPID_PUBLIC_KEY and settings.VAPID_PRIVATE_KEY)
 
 
-def send(user, *, title: str, body: str, url: str = "/app", tag: str = "") -> int:
-    """Manda el aviso a todos los dispositivos de la persona. Borra los que ya no existen."""
-    if not push_enabled():
+# ---------- Firebase (app de Android) ----------
+
+def register_fcm(user, token: str) -> int:
+    token = (token or "").strip()
+    if not 20 <= len(token) <= 300:
+        raise ServiceError("Identificador de avisos inválido.")
+    FcmDevice.objects.update_or_create(token=token, defaults={"user": user})
+    prefs_for(user)
+    return FcmDevice.objects.filter(user=user).count()
+
+
+def unregister_fcm(user, token: str):
+    FcmDevice.objects.filter(user=user, token=(token or "").strip()).delete()
+
+
+_fcm_cache: dict = {}
+
+
+def _fcm_credentials():
+    """(project_id, access_token) de la cuenta de servicio; el token se reutiliza hasta que vence."""
+    if not settings.FCM_SERVICE_ACCOUNT:
+        return None
+    from google.auth.transport.requests import Request
+    from google.oauth2 import service_account
+
+    creds = _fcm_cache.get("creds")
+    if creds is None:
+        info = json.loads(settings.FCM_SERVICE_ACCOUNT)
+        creds = service_account.Credentials.from_service_account_info(
+            info, scopes=["https://www.googleapis.com/auth/firebase.messaging"]
+        )
+        _fcm_cache["creds"], _fcm_cache["project"] = creds, info["project_id"]
+    if not creds.valid:
+        creds.refresh(Request())
+    return _fcm_cache["project"], creds.token
+
+
+def send_fcm(user, *, title: str, body: str, url: str, tag: str) -> int:
+    """Aviso nativo a los celulares con la app de Android. Borra los que ya no existen."""
+    devices = list(FcmDevice.objects.filter(user=user))
+    if not devices:
         return 0
+    try:
+        cred = _fcm_credentials()
+    except Exception:  # noqa: BLE001
+        log.exception("Firebase: no se pudieron obtener credenciales")
+        return 0
+    if not cred:
+        return 0
+    import requests
+
+    project, access = cred
+    sent = 0
+    for d in devices:
+        msg = {
+            "message": {
+                "token": d.token,
+                # Solo datos: la app arma la notificación (ícono, canal y a dónde abre).
+                "data": {"title": title, "body": body, "url": url, "tag": tag or ""},
+                "android": {"priority": "HIGH", "ttl": "3600s"},
+            }
+        }
+        try:
+            r = requests.post(
+                f"https://fcm.googleapis.com/v1/projects/{project}/messages:send",
+                json=msg, headers={"Authorization": f"Bearer {access}"}, timeout=10,
+            )
+        except requests.RequestException as e:
+            log.warning("Firebase sin conexión: %s", e)
+            continue
+        if r.ok:
+            sent += 1
+        elif r.status_code == 404 or "UNREGISTERED" in r.text or "registration-token-not-registered" in r.text:
+            d.delete()  # desinstalaron la app
+        else:
+            log.warning("Firebase respondió %s: %s", r.status_code, r.text[:300])
+    return sent
+
+
+def send(user, *, title: str, body: str, url: str = "/app", tag: str = "") -> int:
+    """Manda el aviso a todos los dispositivos de la persona (app de Android por Firebase; web por
+    Web Push). Borra los que ya no existen."""
+    sent = send_fcm(user, title=title, body=body, url=url, tag=tag)
+    if not push_enabled():
+        return sent
     from pywebpush import WebPushException, webpush
 
     payload = json.dumps({"title": title, "body": body, "url": url, "tag": tag})
-    sent = 0
     for sub in PushSubscription.objects.filter(user=user):
         try:
             webpush(
@@ -232,7 +312,13 @@ def _fmt_hour(dt: datetime) -> str:
 def _members_with_push():
     from apps.accounts.services import features_for
 
-    users = User.objects.filter(push_subscriptions__isnull=False, is_active=True).distinct().select_related("reminder_prefs")
+    from django.db.models import Q
+
+    users = (
+        User.objects.filter(Q(push_subscriptions__isnull=False) | Q(fcm_devices__isnull=False), is_active=True)
+        .distinct()
+        .select_related("reminder_prefs")
+    )
     for u in users:
         f = features_for(u)
         if f["access"] and not f["coach"]:

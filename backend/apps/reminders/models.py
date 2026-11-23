@@ -17,6 +17,18 @@ class PushSubscription(models.Model):
         verbose_name_plural = "dispositivos con avisos"
 
 
+class FcmDevice(models.Model):
+    """Celular con la app de Android (Play Store): los avisos van por Firebase, como app nativa."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="fcm_devices")
+    token = models.CharField(max_length=300, unique=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "celular Android (Firebase)"
+        verbose_name_plural = "celulares Android (Firebase)"
+
+
 class ReminderPrefs(models.Model):
     """Qué avisos quiere recibir cada persona."""
 

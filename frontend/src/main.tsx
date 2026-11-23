@@ -6,6 +6,9 @@ import { ApiError } from "@/api/client";
 import { router } from "@/app/router";
 import { ToastProvider } from "@/components/ui/toast";
 import "@/styles/tokens.css";
+import { captureLaunchParams } from "@/lib/twa";
+
+captureLaunchParams(); // parámetros que manda la app de Android (antes de que el router lea la URL)
 
 // Tras publicar una versión nueva, una pestaña abierta (o el service worker) puede pedir
 // chunks que ya no existen. Recargamos una sola vez para tomar el index.html nuevo.

@@ -152,6 +152,9 @@ if os.environ.get("BUCKET_NAME"):
         },
     }
 
+# Avisos nativos en la app de Android: JSON de la cuenta de servicio de Firebase (secreto, solo en Railway).
+FCM_SERVICE_ACCOUNT = os.environ.get("FCM_SERVICE_ACCOUNT", "")
+
 # Avisos al celular (Web Push). Llaves VAPID: python manage.py vapid_keys
 VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
 VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")

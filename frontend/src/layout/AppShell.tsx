@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { cx } from "@/components/ui";
+import { syncFcm } from "@/lib/twa";
 import { useMe } from "@/app/session";
 import { useLogout } from "@/features/auth/useLogout";
 import { ExpiringBanner } from "@/features/membership/MembershipNotices";
@@ -88,6 +90,10 @@ function Sidebar({ main, extra, coach }: { main: NavItem[]; extra: NavItem[]; co
 
 export function AppShell() {
   const { data: me } = useMe();
+  // App de Android: si el celular ya tenía avisos activados, registra su identificador para esta cuenta.
+  useEffect(() => {
+    if (me) syncFcm(me.id).catch(() => {});
+  }, [me]);
   const f = me!.features;
   const items = buildNav(f);
   return (
