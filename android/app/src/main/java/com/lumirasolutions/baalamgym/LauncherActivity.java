@@ -19,9 +19,18 @@ import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class LauncherActivity
         extends com.google.androidbrowserhelper.trusted.LauncherActivity {
+
+    /** Tiempo máximo para esperar el identificador de Firebase antes de abrir la web. */
+    private static final long TOKEN_WAIT_MS = 3000;
+    private static String lastTokenError = null;
+    private boolean launched = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +46,33 @@ public class LauncherActivity
         }
     }
 
+    /** Si aún no hay identificador de Firebase, lo pide y abre la web cuando llega (máx. 3 s). */
+    @Override
+    protected boolean shouldLaunchImmediately() {
+        if (FcmService.token(this) != null) return true;
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                FcmService.saveToken(this, task.getResult());
+                lastTokenError = null;
+            } else {
+                Exception e = task.getException();
+                lastTokenError = e == null ? "sin token" : e.getClass().getSimpleName() + ": " + e.getMessage();
+            }
+            launchOnce();
+        });
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (!launched && FcmService.token(this) == null && lastTokenError == null) lastTokenError = "tiempo agotado";
+            launchOnce();
+        }, TOKEN_WAIT_MS);
+        return false;
+    }
+
+    private void launchOnce() {
+        if (launched || isFinishing()) return;
+        launched = true;
+        launchTwa();
+    }
+
     @Override
     protected Uri getLaunchingUrl() {
         // Get the original launch Url (o la del aviso que se tocó).
@@ -46,7 +82,12 @@ public class LauncherActivity
         if (uri == null || !getString(R.string.hostName).equals(uri.getHost())) return uri;
         Uri.Builder b = uri.buildUpon().appendQueryParameter("twa", "1");
         String token = FcmService.token(this);
-        if (token != null) b.appendQueryParameter("fcm_token", token);
+        if (token != null) {
+            b.appendQueryParameter("fcm_token", token);
+        } else if (lastTokenError != null) {
+            String err = lastTokenError.length() > 150 ? lastTokenError.substring(0, 150) : lastTokenError;
+            b.appendQueryParameter("fcm_error", err);
+        }
         return b.build();
     }
 }

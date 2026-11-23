@@ -6,6 +6,7 @@ const K_TWA = "baalam.twa";
 const K_TOKEN = "baalam.fcm.token";
 const K_ON = "baalam.fcm.on"; // la persona activó los avisos en la app
 const K_SENT = "baalam.fcm.sent"; // `${userId}:${token}` ya registrado en el servidor
+const K_ERR = "baalam.fcm.error"; // motivo por el que la app no obtuvo su identificador
 
 const get = (k: string) => {
   try {
@@ -28,17 +29,21 @@ export function captureLaunchParams() {
   const url = new URL(window.location.href);
   const twa = url.searchParams.get("twa");
   const token = url.searchParams.get("fcm_token");
-  if (!twa && !token) return;
+  const error = url.searchParams.get("fcm_error");
+  if (!twa && !token && !error) return;
   if (twa === "1") put(K_TWA, "1");
   if (token) put(K_TOKEN, token);
+  put(K_ERR, token ? null : error);
   url.searchParams.delete("twa");
   url.searchParams.delete("fcm_token");
+  url.searchParams.delete("fcm_error");
   window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
 }
 
 export const isAndroidApp = () => get(K_TWA) === "1" || document.referrer.startsWith("android-app://");
 export const fcmToken = () => get(K_TOKEN);
 export const fcmOn = () => get(K_ON) === "1";
+export const fcmError = () => get(K_ERR);
 
 /** Registra el celular en el servidor para esta cuenta (si cambió el token o la cuenta). */
 export async function syncFcm(userId: number, force = false) {

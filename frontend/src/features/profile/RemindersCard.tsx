@@ -5,7 +5,7 @@ import { api, unwrap } from "@/api/client";
 import { Button, Card, Stepper, Switch, cx } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { currentSubscription, disablePush, enablePush, isIOS, isStandalone, pushSupported } from "@/lib/push";
-import { disableFcm, fcmOn, fcmToken, isAndroidApp, syncFcm } from "@/lib/twa";
+import { disableFcm, fcmError, fcmOn, fcmToken, isAndroidApp, syncFcm } from "@/lib/twa";
 import { useMe } from "@/app/session";
 
 type Prefs = {
@@ -199,7 +199,13 @@ export function RemindersCard() {
           )}
 
           <p className="text-xs text-ink-2">
-            {nativeApp ? "Avisos de la app (nativos)" : isAndroidApp() ? "App de Android · ábrela de nuevo para activar los avisos nativos" : "Avisos del navegador"}
+            {nativeApp
+              ? "Avisos de la app (nativos)"
+              : isAndroidApp()
+                ? fcmError()
+                  ? `App de Android · no se pudo activar Firebase (${fcmError()})`
+                  : "App de Android · ábrela de nuevo para activar los avisos nativos"
+                : "Avisos del navegador"}
           </p>
 
           <div className="divide-y divide-line">
