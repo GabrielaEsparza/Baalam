@@ -12,7 +12,8 @@ class PointsLedger(TimeStamped):
         WORKOUT = "workout", "Entrenamiento completo"
         CLASS = "class", "Clase grupal"
         PR = "pr", "Nuevo PR"
-        STREAK_WEEK = "streak_week", "Semana con 4+ asistencias"
+        PUNCTUAL = "punctual", "Llegar puntual a clase"
+        STREAK_WEEK = "streak_week", "Cumplir todos sus días de la semana"
         BODY_LOG = "body_log", "Registro de peso o medidas"
         MANUAL = "manual", "Ajuste del coach"
 

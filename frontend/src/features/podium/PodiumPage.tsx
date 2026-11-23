@@ -11,8 +11,9 @@ import { monthKey, monthLabel } from "@/lib/format";
 const RULE_LABELS: Record<string, string> = {
   checkin: "Asistencia (1 por día)",
   workout: "Completar entrenamiento (≥ 80 % de series) o asistir a tu clase",
-  pr: "Nuevo PR (máx. 3 por día)",
-  streak_week: "Semana con 4+ asistencias",
+  punctual: "Llegar puntual a tu clase",
+  pr: "Nuevo PR (máx. 3 por semana)",
+  streak_week: "Cumplir todos tus días de la semana",
   body_log: "Registrar peso o medidas (1 por semana)",
 };
 

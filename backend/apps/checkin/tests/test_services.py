@@ -75,6 +75,29 @@ class CheckinFlowTests(TestCase):
             cs.checkin(alumna, token=self.token)
         self.assertEqual(PointsLedger.objects.filter(member=alumna).count(), 2)
 
+    def test_class_on_time_gets_punctuality_bonus(self):
+        alumna = make_member("puntual@t.mx")
+        pay(alumna, self.clases)
+        self.sch.type = "class"
+        self.sch.save()
+        self.session.start_at = timezone.now() + timedelta(minutes=5)
+        self.session.save()
+        Booking.objects.create(member=alumna, session=self.session, month=today().strftime("%Y-%m"))
+        res = cs.checkin(alumna, token=self.token)
+        self.assertEqual(res["points"], 180)
+        self.assertTrue(PointsLedger.objects.filter(member=alumna, reason="punctual").exists())
+
+    def test_week_bonus_follows_plan_days(self):
+        from apps.podium import services as podium
+
+        m = cs.current_membership(self.member)
+        m.sessions_per_week = 1
+        m.save()
+        self.book()
+        cs.checkin(self.member, token=self.token)
+        self.assertEqual(podium.week_goal(self.member), 1)
+        self.assertTrue(PointsLedger.objects.filter(member=self.member, reason="streak_week").exists())
+
     def test_one_per_day(self):
         self.book()
         cs.checkin(self.member, token=self.token)

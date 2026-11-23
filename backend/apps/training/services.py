@@ -5,7 +5,7 @@ TemplateDay por día de la semana que entrena; cada día tiene sus TemplateItem.
 Lo que el miembro registra va a WorkoutSession/SetLog, así editar la rutina no
 altera el historial.
 """
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.db import transaction
@@ -301,6 +301,7 @@ def _attendance_refs(member, on: date) -> list[str]:
     refs = [f"{PointsLedger.Reason.CHECKIN}:{on.isoformat()}"]
     if CheckIn.objects.filter(member=member, date=on, booking__session__schedule__type="class").exists():
         refs.append(f"{PointsLedger.Reason.WORKOUT}:{on.isoformat()}")
+        refs.append(f"{PointsLedger.Reason.PUNCTUAL}:{on.isoformat()}")
     return refs
 
 
@@ -333,6 +334,8 @@ def clear_swap(member) -> dict:
         podium.award(member, PointsLedger.Reason.CHECKIN, on=t)
         if ci.booking and ci.booking.session.schedule.type == Schedule.Type.CLASS:
             podium.award(member, PointsLedger.Reason.WORKOUT, on=t)
+            if ci.at <= ci.booking.session.start_at + timedelta(minutes=podium.PUNCTUAL_GRACE_MIN):
+                podium.award(member, PointsLedger.Reason.PUNCTUAL, on=t)
     return today_workout(member)
 
 

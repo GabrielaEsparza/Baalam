@@ -15,10 +15,12 @@ DEFAULT_POINTS = {
     R.CHECKIN: 100,
     R.WORKOUT: 50,
     R.PR: 30,
+    R.PUNCTUAL: 30,
     R.STREAK_WEEK: 150,
     R.BODY_LOG: 20,
 }
-PR_DAILY_LIMIT = 3
+PR_WEEKLY_LIMIT = 3  # los PR son un extra de piso libre, no deciden el podio
+PUNCTUAL_GRACE_MIN = 5  # minutos después del inicio que aún cuentan como puntual
 
 
 def points_for(reason: str) -> int:
@@ -27,7 +29,7 @@ def points_for(reason: str) -> int:
 
 
 def _ref_for(reason: str, on: date, ref: str) -> str:
-    if reason in (R.CHECKIN, R.WORKOUT):
+    if reason in (R.CHECKIN, R.WORKOUT, R.PUNCTUAL):
         return f"{reason}:{on.isoformat()}"
     if reason in (R.STREAK_WEEK, R.BODY_LOG):
         y, w, _ = on.isocalendar()
@@ -48,7 +50,8 @@ def award(member, reason: str, *, on: date | None = None, ref: str = "", points:
     if key and PointsLedger.objects.filter(member=member, ref=key).exists():
         return None
     if reason == R.PR:
-        if PointsLedger.objects.filter(member=member, reason=R.PR, created_at__date=on).count() >= PR_DAILY_LIMIT:
+        start, end = week_bounds(on)
+        if PointsLedger.objects.filter(member=member, reason=R.PR, created_at__date__range=(start, end)).count() >= PR_WEEKLY_LIMIT:
             return None
     return PointsLedger.objects.create(
         member=member,
@@ -60,13 +63,21 @@ def award(member, reason: str, *, on: date | None = None, ref: str = "", points:
     )
 
 
+def week_goal(member) -> int:
+    """Asistencias para el bono de semana: los días por semana de su plan (3 en clases, 4 en rutina…)."""
+    from apps.memberships.services import current_membership
+
+    m = current_membership(member)
+    return max(1, m.sessions_per_week) if m else 4
+
+
 def check_weekly_streak(member, on: date | None = None):
-    """Si la semana ya lleva 4+ asistencias, otorga el bono una sola vez."""
+    """Si en la semana ya cumplió todos los días de su plan, otorga el bono una sola vez."""
     from apps.checkin.models import CheckIn
 
     on = on or today()
     start, end = week_bounds(on)
-    if CheckIn.objects.filter(member=member, date__range=(start, end)).count() >= 4:
+    if CheckIn.objects.filter(member=member, date__range=(start, end)).count() >= week_goal(member):
         return award(member, R.STREAK_WEEK, on=on)
     return None
 

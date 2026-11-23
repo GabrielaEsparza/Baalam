@@ -229,6 +229,9 @@ def checkin(member, *, token: str | None = None, code: str | None = None, source
             # (Una sola asistencia por día; los PR solo los suma quien registra sus series en piso libre.)
             if not swapped and booking and booking.session.schedule.type == Schedule.Type.CLASS:
                 awarded.append(podium.award(member, PointsLedger.Reason.WORKOUT))
+                # Bono de puntualidad: llegar a la clase a tiempo (con unos minutos de tolerancia).
+                if ci.at <= booking.session.start_at + timedelta(minutes=podium.PUNCTUAL_GRACE_MIN):
+                    awarded.append(podium.award(member, PointsLedger.Reason.PUNCTUAL))
             podium.check_weekly_streak(member)
     except IntegrityError:
         raise ServiceError("Ya registraste tu asistencia hoy.", "already", 409)
