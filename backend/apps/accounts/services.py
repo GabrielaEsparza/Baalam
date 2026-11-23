@@ -311,3 +311,63 @@ def delete_account(user, password: str = "") -> None:
     user.is_active = False
     user.set_unusable_password()
     user.save()
+
+
+GOOGLE_ISSUERS = ("accounts.google.com", "https://accounts.google.com")
+
+
+def verify_google_credential(credential: str) -> dict:
+    """Comprueba con las llaves públicas de Google que el token es auténtico, vigente y para esta app."""
+    from django.conf import settings
+    from google.auth.transport import requests as google_requests
+    from google.oauth2 import id_token
+
+    if not settings.GOOGLE_CLIENT_ID:
+        raise ServiceError("Entrar con Google aún no está disponible.", "google_disabled", 503)
+    try:
+        info = id_token.verify_oauth2_token(credential, google_requests.Request(), settings.GOOGLE_CLIENT_ID)
+    except ValueError:
+        raise ServiceError("No se pudo verificar tu cuenta de Google. Intenta de nuevo.", "google_invalid", 401)
+    if info.get("iss") not in GOOGLE_ISSUERS or not info.get("email") or not info.get("email_verified"):
+        raise ServiceError("Tu cuenta de Google no tiene un correo verificado.", "google_unverified", 401)
+    return info
+
+
+@transaction.atomic
+def google_sign_in(info: dict):
+    """Entra con la cuenta que tenga ese correo; si no existe, la crea (pendiente hasta su primer pago).
+    Devuelve (user, creada)."""
+    from apps.memberships.models import MembershipRequest
+
+    email = info["email"].strip().lower()
+    user = User.objects.filter(username=email).first()
+    if user:
+        if not user.is_active:
+            raise ServiceError("Esta cuenta está desactivada. Habla con recepción.", "inactive", 403)
+        if get_profile(user).status == Profile.Status.BLOCKED:
+            raise ServiceError("Tu cuenta está bloqueada. Habla con tu coach.", "blocked", 403)
+        return user, False
+    user = User.objects.create_user(username=email, email=email)
+    user.set_unusable_password()  # entra con Google; si quiere contraseña, usa "Olvidé mi contraseña"
+    user.save()
+    profile = get_profile(user)
+    profile.full_name = (info.get("name") or email.split("@")[0]).strip()[:120]
+    profile.save()
+    MembershipRequest.objects.create(member=user, type=MembershipRequest.Type.SIGNUP)
+    picture = info.get("picture")
+    if picture:
+        transaction.on_commit(lambda: _google_avatar(user, picture))
+    return user, True
+
+
+def _google_avatar(user, url: str):
+    """Usa su foto de Google como foto de perfil (si falla, no pasa nada)."""
+    import requests
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    try:
+        r = requests.get(url.replace("=s96-c", "=s512-c"), timeout=8)
+        if r.ok and r.headers.get("Content-Type", "").startswith("image/"):
+            save_avatar(user, SimpleUploadedFile("google.jpg", r.content, content_type=r.headers["Content-Type"]))
+    except Exception:  # noqa: BLE001
+        pass

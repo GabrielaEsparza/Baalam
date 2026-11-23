@@ -58,6 +58,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Google Login
+         * @description "Continuar con Google": entra con la cuenta de ese correo o la crea.
+         */
+        post: operations["apps_accounts_api_google_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/logout": {
         parameters: {
             query?: never;
@@ -1635,6 +1655,11 @@ export interface components {
             avatar_url: string | null;
             /** Role */
             role: string;
+            /**
+             * Has Password
+             * @default true
+             */
+            has_password: boolean;
             /** Status */
             status: string;
             /** Goal */
@@ -1714,6 +1739,11 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** GoogleIn */
+        GoogleIn: {
+            /** Credential */
+            credential: string;
         };
         /** ResetIn */
         ResetIn: {
@@ -1881,6 +1911,8 @@ export interface components {
             hours: string;
             /** Plans */
             plans: components["schemas"]["PlanOut"][];
+            /** Google Client Id */
+            google_client_id?: string | null;
         };
         /** MembershipOut */
         MembershipOut: {
@@ -2745,6 +2777,30 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LoginIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
+                };
+            };
+        };
+    };
+    apps_accounts_api_google_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleIn"];
             };
         };
         responses: {

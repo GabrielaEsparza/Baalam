@@ -66,6 +66,7 @@ def me_payload(user):
         "phone": p.phone,
         "avatar_url": p.avatar.url if p.avatar else None,
         "role": p.role,
+        "has_password": user.has_usable_password(),
         "status": p.status,
         "goal": p.goal,
         "birth_date": p.birth_date,
@@ -106,6 +107,20 @@ def do_login(request, data: LoginIn):
     if services.get_profile(user).status == Profile.Status.BLOCKED:
         raise HttpError(403, "Tu cuenta está bloqueada. Habla con tu coach.")
     login(request, user)
+    return me_payload(user)
+
+
+class GoogleIn(Schema):
+    credential: str
+
+
+@auth_router.post("/google", auth=None, response=MeOut)
+def google_login(request, data: GoogleIn):
+    """"Continuar con Google": entra con la cuenta de ese correo o la crea."""
+    _csrf(request)
+    info = services.verify_google_credential(data.credential)
+    user, _ = services.google_sign_in(info)
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
     return me_payload(user)
 
 

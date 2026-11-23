@@ -13,3 +13,4 @@ requests>=2.32
 Pillow>=11
 Brotli>=1.1
 pywebpush>=2.0
+google-auth>=2.30

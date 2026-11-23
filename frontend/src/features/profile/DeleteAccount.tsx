@@ -16,7 +16,7 @@ export function DeleteAccount() {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const needsPassword = !!me;
+  const needsPassword = !!me?.has_password; // quien entra solo con Google no tiene contraseña
 
   async function confirm() {
     setBusy(true);

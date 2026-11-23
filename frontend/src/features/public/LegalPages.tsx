@@ -67,6 +67,10 @@ export function PrivacyPage() {
         <h2>Qué datos recabamos</h2>
         <ul>
           <li><b>Cuenta:</b> nombre, correo, teléfono (WhatsApp) y contraseña (guardada cifrada; nadie puede verla).</li>
+          <li>
+            <b>Si entras con Google:</b> Google nos comparte tu nombre, correo y foto de perfil. No recibimos tu contraseña
+            de Google ni otros datos de tu cuenta.
+          </li>
           <li><b>Perfil (opcional):</b> foto, fecha de nacimiento, sexo, estatura, objetivo y peso meta.</li>
           <li><b>Membresía:</b> plan, fechas de vigencia y pagos registrados por recepción.</li>
           <li><b>Uso del gym:</b> asistencias (registro con QR), reservas de horarios y puntos del podio.</li>
@@ -110,6 +114,7 @@ export function PrivacyPage() {
         <ul>
           <li><b>Railway</b> (Estados Unidos): alojamiento del servidor y la base de datos.</li>
           <li><b>Servicios de notificaciones</b> de Google, Apple o Mozilla: entregan los avisos a tu celular.</li>
+          <li><b>Google</b>: si eliges “Continuar con Google”, para comprobar tu identidad.</li>
           <li><b>Un proveedor de correo electrónico</b>: envío de correos para recuperar tu contraseña.</li>
           <li><b>Google Fonts</b>: tipografías de la app.</li>
           <li>
@@ -203,7 +208,7 @@ export function DeleteAccountPage() {
             <h2>Desde la app</h2>
             <p>
               Entra a <b>Perfil</b> y, al final, toca <b>Eliminar mi cuenta</b>. También puedes hacerlo aquí con tu correo y
-              contraseña.
+              contraseña. Si entras con Google (sin contraseña), hazlo desde la app.
             </p>
           </section>
 

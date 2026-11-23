@@ -44,6 +44,7 @@ class MeOut(Schema):
     phone: str
     avatar_url: str | None
     role: str
+    has_password: bool = True
     status: str
     goal: str
     birth_date: date | None = None

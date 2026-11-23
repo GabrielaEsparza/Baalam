@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { api, unwrap } from "@/api/client";
 import { useMe, useSetMe } from "@/app/session";
 import { Button, Field, Input, PasswordInput } from "@/components/ui";
+import { GoogleButton } from "./GoogleButton";
 
 function AuthLayout({ title, accent, children }: { title: string; accent?: string; children: ReactNode }) {
   return (
@@ -63,7 +64,8 @@ export function LoginPage() {
 
   return (
     <AuthLayout title="Hola de" accent="nuevo">
-      <form onSubmit={submit} className="space-y-4">
+      <GoogleButton onError={setErr} />
+      <form onSubmit={submit} className="mt-4 space-y-4">
         <Field label="Correo">
           <Input name="email" type="email" autoComplete="email" required inputMode="email" />
         </Field>
@@ -125,7 +127,8 @@ export function RegisterPage() {
 
   return (
     <AuthLayout title="Crea tu" accent="cuenta">
-      <form onSubmit={submit} className="space-y-4">
+      <GoogleButton context="signup" onError={setErr} />
+      <form onSubmit={submit} className="mt-4 space-y-4">
         <Field label="Nombre completo">
           <Input name="full_name" autoComplete="name" required minLength={2} />
         </Field>

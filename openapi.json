@@ -86,6 +86,39 @@
     }
    }
   },
+  "/api/auth/google": {
+   "post": {
+    "operationId": "apps_accounts_api_google_login",
+    "summary": "Google Login",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MeOut"
+        }
+       }
+      }
+     }
+    },
+    "description": "\"Continuar con Google\": entra con la cuenta de ese correo o la crea.",
+    "tags": [
+     "auth"
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GoogleIn"
+       }
+      }
+     },
+     "required": true
+    }
+   }
+  },
   "/api/auth/logout": {
    "post": {
     "operationId": "apps_accounts_api_do_logout",
@@ -4121,6 +4154,11 @@
       "title": "Role",
       "type": "string"
      },
+     "has_password": {
+      "default": true,
+      "title": "Has Password",
+      "type": "boolean"
+     },
      "status": {
       "title": "Status",
       "type": "string"
@@ -4343,6 +4381,19 @@
      "password"
     ],
     "title": "LoginIn",
+    "type": "object"
+   },
+   "GoogleIn": {
+    "properties": {
+     "credential": {
+      "title": "Credential",
+      "type": "string"
+     }
+    },
+    "required": [
+     "credential"
+    ],
+    "title": "GoogleIn",
     "type": "object"
    },
    "ResetIn": {
@@ -4857,6 +4908,17 @@
       },
       "title": "Plans",
       "type": "array"
+     },
+     "google_client_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Google Client Id"
      }
     },
     "required": [

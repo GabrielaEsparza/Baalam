@@ -1,3 +1,4 @@
+from django.conf import settings
 from datetime import date
 from decimal import Decimal
 from typing import Literal
@@ -95,6 +96,7 @@ class PublicGymOut(Schema):
     maps_url: str
     hours: str
     plans: list[PlanOut]
+    google_client_id: str | None = None
 
 
 # ---------- Público / miembro ----------
@@ -110,6 +112,7 @@ def gym_info(request):
         "maps_url": s.maps_url,
         "hours": s.hours,
         "plans": list(Plan.objects.filter(active=True)),
+        "google_client_id": settings.GOOGLE_CLIENT_ID or None,
     }
 
 
