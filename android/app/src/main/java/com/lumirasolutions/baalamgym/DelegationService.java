@@ -1,4 +1,4 @@
-package com.lumirasolutionsmx.baalamgym;
+package com.lumirasolutions.baalamgym;
 
 
 

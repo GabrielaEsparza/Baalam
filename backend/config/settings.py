@@ -63,7 +63,7 @@ GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 
 # App de Android (TWA): Digital Asset Links. Huellas SHA-256 separadas por coma:
 # la de la llave de subida y la de "Firma de apps de Google Play" (Play Console → Integridad de la app).
-ANDROID_PACKAGE = os.environ.get("ANDROID_PACKAGE", "com.lumirasolutionsmx.baalamgym")
+ANDROID_PACKAGE = os.environ.get("ANDROID_PACKAGE", "com.lumirasolutions.baalamgym")
 ASSETLINKS_SHA256 = [f.strip().upper() for f in os.environ.get("ASSETLINKS_SHA256", "").split(",") if f.strip()]
 
 # Dominio principal: "www." + este dominio redirige aquí.

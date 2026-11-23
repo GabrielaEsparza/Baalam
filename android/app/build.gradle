@@ -21,7 +21,7 @@ plugins {
 }
 
 def twaManifest = [
-    applicationId: 'com.lumirasolutionsmx.baalamgym',
+    applicationId: 'com.lumirasolutions.baalamgym',
     hostName: 'baalamgym.com', // The domain being opened in the TWA.
     launchUrl: '/app', // The start path for the TWA. Must be relative to the domain.
     name: 'BÃALAM GYM', // The application name.
@@ -52,9 +52,9 @@ def twaManifest = [
 
 android {
     compileSdkVersion 36
-    namespace "com.lumirasolutionsmx.baalamgym"
+    namespace "com.lumirasolutions.baalamgym"
     defaultConfig {
-        applicationId "com.lumirasolutionsmx.baalamgym"
+        applicationId "com.lumirasolutions.baalamgym"
         minSdkVersion 24
         targetSdkVersion 36
         versionCode 1
