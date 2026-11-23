@@ -6690,6 +6690,11 @@
       "title": "Uses Google",
       "type": "boolean"
      },
+     "includes_routine": {
+      "default": false,
+      "title": "Includes Routine",
+      "type": "boolean"
+     },
      "payments": {
       "items": {
        "additionalProperties": true,

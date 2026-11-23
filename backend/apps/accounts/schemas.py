@@ -138,6 +138,7 @@ class MemberDetail(MemberRow):
     has_password: bool = True
     needs_access_link: bool = False
     uses_google: bool = False
+    includes_routine: bool = False  # Plan Clases: sin rutina personalizada
     payments: list[dict]
     recent_checkins: list[datetime]
 

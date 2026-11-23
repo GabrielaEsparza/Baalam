@@ -224,9 +224,11 @@ def checkin(member, *, token: str | None = None, code: str | None = None, source
                 booking.save(update_fields=["status", "updated_at"])
             # Si hoy repone otro día de su rutina, no suma puntos por asistir a su horario.
             swapped = is_swapped(member)
-            points = None if swapped else podium.award(member, PointsLedger.Reason.CHECKIN)
+            awarded = [] if swapped else [podium.award(member, PointsLedger.Reason.CHECKIN)]
+            # En clase hacen lo que la coach indique: asistir cuenta como entrenamiento completo.
+            # (Una sola asistencia por día; los PR solo los suma quien registra sus series en piso libre.)
             if not swapped and booking and booking.session.schedule.type == Schedule.Type.CLASS:
-                podium.award(member, PointsLedger.Reason.CLASS, ref=str(booking.id))
+                awarded.append(podium.award(member, PointsLedger.Reason.WORKOUT))
             podium.check_weekly_streak(member)
     except IntegrityError:
         raise ServiceError("Ya registraste tu asistencia hoy.", "already", 409)
@@ -237,6 +239,6 @@ def checkin(member, *, token: str | None = None, code: str | None = None, source
         "session": (
             {"name": session.schedule.name, "start_at": session.start_at, "end_at": session.end_at} if session else None
         ),
-        "points": points.points if points else 0,
+        "points": sum(a.points for a in awarded if a),
         "warning": "Tu membresía está en días de gracia: renueva pronto." if status == "grace" else None,
     }

@@ -161,7 +161,7 @@ export default function MemberDetailPage() {
         </div>
       </Card>
 
-      {m.plan_name && m.role === "member" && (
+      {m.includes_routine && m.role === "member" && (
         <Link to={`/coach/rutinas/${id}`} className="mt-3 block">
           <Button variant="dark" full icon={ClipboardList}>
             Armar su rutina

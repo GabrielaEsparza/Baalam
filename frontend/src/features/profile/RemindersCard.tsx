@@ -139,8 +139,11 @@ export function RemindersCard() {
   const set = (patch: Partial<Draft>) => setDraft({ ...d, ...patch });
   const dirty = !sameDraft(d, toDraft(p));
   const goal = d.water_goal_ml ?? p.water_goal_auto_ml;
-  const activeCount = [p.water, p.food, p.workout, p.classes, p.measures].filter(Boolean).length;
-  const summary = on ? `Activados en este celular · ${activeCount} de 5 avisos` : "Desactivados en este celular";
+  // Plan Clases: sin rutina personalizada, no hay entrenamiento que registrar.
+  const routine = !!me?.features.routine;
+  const prefs = [p.water, p.food, p.classes, p.measures, ...(routine ? [p.workout] : [])];
+  const activeCount = prefs.filter(Boolean).length;
+  const summary = on ? `Activados en este celular · ${activeCount} de ${prefs.length} avisos` : "Desactivados en este celular";
 
   return (
     <Card className="mt-6 scroll-mt-20 p-0" id="avisos">
@@ -216,13 +219,15 @@ export function RemindersCard() {
               checked={d.food}
               onChange={(v) => set({ food: v })}
             />
+            {routine && (
             <Pref
               label="🏋️ Si no has registrado tu entrenamiento"
               hint="Solo de lunes a viernes, los días que tienes rutina"
               checked={d.workout}
               onChange={(v) => set({ workout: v })}
             />
-            {d.workout && (
+            )}
+            {routine && d.workout && (
               <label className="flex min-h-12 items-center justify-between gap-4 pb-2">
                 <span className="text-[15px] text-ink-2">Avisarme a las</span>
                 <select

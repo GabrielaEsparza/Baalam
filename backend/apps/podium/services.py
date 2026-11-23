@@ -14,7 +14,6 @@ R = PointsLedger.Reason
 DEFAULT_POINTS = {
     R.CHECKIN: 100,
     R.WORKOUT: 50,
-    R.CLASS: 50,
     R.PR: 30,
     R.STREAK_WEEK: 150,
     R.BODY_LOG: 20,

@@ -345,6 +345,7 @@ def member_detail(request, member_id: int):
         # Sin contraseña pero ya entró: entra con Google (no necesita enlace).
         "needs_access_link": not p.user.has_usable_password() and p.user.last_login is None,
         "uses_google": not p.user.has_usable_password() and p.user.last_login is not None,
+        "includes_routine": bool(m and m.plan.includes_routine),
         "payments": (
             list(p.user.payments.values("id", "amount_mxn", "method", "paid_at", "note")[:24]) if pays else []
         ),

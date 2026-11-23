@@ -204,6 +204,10 @@ def save_day(member, weekday: int, *, label: str, focus: str, items: list[dict],
     from apps.accounts.services import ensure_member
 
     ensure_member(member)
+    m = current_membership(member)
+    if not m or not m.plan.includes_routine:
+        # Plan Clases: hacen lo que la coach indique en clase, sin rutina ni ejercicios propios.
+        raise ServiceError("Su plan no incluye rutina personalizada.", "no_routine", 400)
     if not 0 <= weekday <= 6:
         raise ServiceError("Día inválido.")
     r = active_routine(member, by=by)
@@ -291,13 +295,12 @@ def _today_day(member, on: date | None = None) -> TemplateDay | None:
 
 
 def _attendance_refs(member, on: date) -> list[str]:
-    """Claves de los puntos por asistir a su horario (asistencia y clase grupal) de ese día."""
+    """Claves de los puntos por asistir a su horario (asistencia y, si fue clase, entrenamiento) de ese día."""
     from apps.checkin.models import CheckIn
 
     refs = [f"{PointsLedger.Reason.CHECKIN}:{on.isoformat()}"]
-    ci = CheckIn.objects.filter(member=member, date=on, booking__isnull=False).first()
-    if ci:
-        refs.append(f"{PointsLedger.Reason.CLASS}:{ci.booking_id}")
+    if CheckIn.objects.filter(member=member, date=on, booking__session__schedule__type="class").exists():
+        refs.append(f"{PointsLedger.Reason.WORKOUT}:{on.isoformat()}")
     return refs
 
 
@@ -329,7 +332,7 @@ def clear_swap(member) -> dict:
     if deleted and ci:
         podium.award(member, PointsLedger.Reason.CHECKIN, on=t)
         if ci.booking and ci.booking.session.schedule.type == Schedule.Type.CLASS:
-            podium.award(member, PointsLedger.Reason.CLASS, ref=str(ci.booking_id))
+            podium.award(member, PointsLedger.Reason.WORKOUT, on=t)
     return today_workout(member)
 
 

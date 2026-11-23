@@ -32,7 +32,7 @@ class TokenTests(TestCase):
 
 class CheckinFlowTests(TestCase):
     def setUp(self):
-        self.rutina, _ = make_plans()
+        self.rutina, self.clases = make_plans()
         self.member = make_member()
         pay(self.member, self.rutina)
         start = (timezone.localtime() - timedelta(minutes=10)).time().replace(second=0, microsecond=0)
@@ -58,6 +58,22 @@ class CheckinFlowTests(TestCase):
         self.assertEqual(b.status, "attended")
         self.assertEqual(res["points"], 100)
         self.assertEqual(PointsLedger.objects.filter(member=self.member).count(), 1)
+
+    def test_class_counts_as_full_workout_once(self):
+        """Clase: una asistencia + puntos de entrenamiento completo; sin bono de clase aparte."""
+        clases = self.clases
+        alumna = make_member("clase@t.mx")
+        pay(alumna, clases)
+        self.sch.type = "class"
+        self.sch.save()
+        Booking.objects.create(member=alumna, session=self.session, month=today().strftime("%Y-%m"))
+        res = cs.checkin(alumna, token=self.token)
+        self.assertEqual(res["points"], 150)
+        reasons = sorted(PointsLedger.objects.filter(member=alumna).values_list("reason", flat=True))
+        self.assertEqual(reasons, ["checkin", "workout"])
+        with self.assertRaises(ServiceError):
+            cs.checkin(alumna, token=self.token)
+        self.assertEqual(PointsLedger.objects.filter(member=alumna).count(), 2)
 
     def test_one_per_day(self):
         self.book()

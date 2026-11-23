@@ -2434,6 +2434,11 @@ export interface components {
              * @default false
              */
             uses_google: boolean;
+            /**
+             * Includes Routine
+             * @default false
+             */
+            includes_routine: boolean;
             /** Payments */
             payments: {
                 [key: string]: unknown;

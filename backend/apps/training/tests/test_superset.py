@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from apps.memberships.tests.test_services import make_member
+from apps.memberships.tests.test_services import make_member, make_plans, pay
 from apps.training import services as ts
 from apps.training.models import Exercise
 
@@ -8,6 +8,7 @@ from apps.training.models import Exercise
 class SupersetAndRepRangeTests(TestCase):
     def setUp(self):
         self.m = make_member("ss@t.mx")
+        pay(self.m, make_plans()[0])
         self.a, self.b, self.c = (Exercise.objects.create(name_es=n) for n in ("Sentadilla", "Lagartija", "Plancha"))
 
     def test_normalize_groups(self):

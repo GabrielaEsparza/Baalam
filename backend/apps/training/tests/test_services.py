@@ -113,6 +113,12 @@ class RoutineTests(TestCase):
         self.assertEqual(self.bench.name_en, "barbell bench press")
         self.assertEqual(self.bench.target_muscles, ["pectorals"])
 
+    def test_classes_plan_has_no_routine(self):
+        other = make_member("clases@t.mx")
+        pay(other, self.clases)
+        with self.assertRaises(ServiceError):
+            ts.save_day(other, self.wd, label="", focus="", items=[])
+
     def test_routine_members_lists_only_routine_plan_with_booked_days(self):
         other = make_member("clases@t.mx")
         pay(other, self.clases)
