@@ -384,7 +384,7 @@ function SwapOptions({
               <span
                 className={cx(
                   "grid size-11 shrink-0 place-items-center rounded-btn font-display text-lg font-bold",
-                  o.weekday === today ? "bg-fire text-white" : "bg-surface-2 text-ink",
+                  o.weekday === today ? "bg-fire-fill text-on-fire" : "bg-surface-2 text-ink",
                 )}
               >
                 {WD_SHORT[o.weekday]}
@@ -426,11 +426,11 @@ function WeekStrip({ today, days }: { today: number; days: number[] }) {
           key={i}
           className={cx(
             "flex h-14 flex-col items-center justify-center gap-1 rounded-btn text-sm font-bold",
-            i === today ? "bg-fire text-white" : "bg-surface-2 text-ink-2",
+            i === today ? "bg-fire-fill text-on-fire" : "bg-surface-2 text-ink-2",
           )}
         >
           {d}
-          <span className={cx("size-1.5 rounded-full", days.includes(i) ? (i === today ? "bg-white" : "bg-purple") : "bg-transparent")} />
+          <span className={cx("size-1.5 rounded-full", days.includes(i) ? (i === today ? "bg-on-fire" : "bg-purple") : "bg-transparent")} />
         </div>
       ))}
     </div>
@@ -777,14 +777,14 @@ function RestTimer({ rest, onDone }: { rest: { total: number; until: number }; o
   return (
     <div className="animate-slide-up fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-40 px-4 lg:bottom-6">
       <div className="mx-auto flex max-w-md items-center gap-3 rounded-card bg-night p-3 pl-4 text-white shadow-lg">
-        <Timer className="size-6 text-fire" />
+        <Timer className="size-6 text-fire-fill" />
         <div className="flex-1">
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#B8AEC2]">Descanso</p>
           <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/15">
-            <div className="h-full bg-fire transition-[width] duration-200" style={{ width: `${(Math.max(0, left) / rest.total) * 100}%` }} />
+            <div className="h-full bg-fire-fill transition-[width] duration-200" style={{ width: `${(Math.max(0, left) / rest.total) * 100}%` }} />
           </div>
         </div>
-        <span className="t-num text-[32px] text-fire">
+        <span className="t-num text-[32px] text-fire-fill">
           {mm}:{ss}
         </span>
         <button onClick={onDone} aria-label="Saltar descanso" className="grid size-11 place-items-center rounded-full hover:bg-white/10">

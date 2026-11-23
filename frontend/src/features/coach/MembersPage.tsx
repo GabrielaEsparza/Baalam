@@ -51,7 +51,7 @@ export default function MembersPage() {
             onClick={() => setStatus(f.value)}
             className={cx(
               "h-10 shrink-0 rounded-full border px-4 text-sm font-semibold",
-              status === f.value ? "border-fire bg-fire text-white" : "border-line bg-surface text-ink-2",
+              status === f.value ? "border-fire-fill bg-fire-fill text-on-fire" : "border-line bg-surface text-ink-2",
             )}
           >
             {f.label}

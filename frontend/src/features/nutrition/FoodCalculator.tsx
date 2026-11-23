@@ -191,7 +191,7 @@ export function FoodCalculator({
                 }}
                 className={cx(
                   "h-10 flex-1 rounded-[9px] text-sm font-semibold transition",
-                  mode === m ? "bg-fire text-white" : "text-ink-2",
+                  mode === m ? "bg-fire-fill text-on-fire" : "text-ink-2",
                   disabled && "opacity-40",
                 )}
               >

@@ -72,7 +72,7 @@ export default function QrScreen() {
           <div className="flex items-center gap-3">
             <img src="/logo.webp" alt="" className="size-14 rounded-full" />
             <h1 className="t-display text-[40px] lg:text-[56px]">
-              Registra tu <span className="text-fire">asistencia</span>
+              Registra tu <span className="text-fire-fill">asistencia</span>
             </h1>
           </div>
           <div className="rounded-[24px] bg-white p-5">
@@ -88,7 +88,7 @@ export default function QrScreen() {
               {data?.code ?? "······"}
             </p>
             <div className="mx-auto mt-3 h-1.5 w-64 overflow-hidden rounded-full bg-[#2A1D36]">
-              <div className="h-full bg-fire transition-[width] duration-1000 ease-linear" style={{ width: `${(left / 60) * 100}%` }} />
+              <div className="h-full bg-fire-fill transition-[width] duration-1000 ease-linear" style={{ width: `${(left / 60) * 100}%` }} />
             </div>
             <p className="mt-2 text-sm tabular-nums text-[#B8AEC2]">Cambia en {left} s</p>
           </div>

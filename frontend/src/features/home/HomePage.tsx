@@ -72,7 +72,7 @@ export default function HomePage() {
                   : "Escanea el QR de recepción al llegar."}
               </p>
             </div>
-            <QrCode className="size-9 shrink-0 text-fire" strokeWidth={1.75} />
+            <QrCode className="size-9 shrink-0 text-fire-fill" strokeWidth={1.75} />
           </div>
           <Link to="/app/checkin" className="block">
             <Button full icon={QrCode} disabled={!["active", "expiring", "grace"].includes(status)}>

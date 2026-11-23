@@ -47,7 +47,7 @@ export default function Landing() {
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(180deg, rgb(18 10 28 / 0.55) 0%, rgb(18 10 28 / 0.2) 45%, rgb(18 10 28 / 0.75) 80%), radial-gradient(90% 35% at 50% 105%, rgb(224 90 0 / 0.38), transparent 70%), radial-gradient(70% 45% at 30% 20%, rgb(91 42 134 / 0.35), transparent 70%)",
+                "linear-gradient(180deg, rgb(18 10 28 / 0.55) 0%, rgb(18 10 28 / 0.2) 45%, rgb(18 10 28 / 0.75) 80%), radial-gradient(90% 35% at 50% 105%, rgb(240 174 46 / 0.30), transparent 70%), radial-gradient(70% 45% at 30% 20%, rgb(91 42 134 / 0.35), transparent 70%)",
             }}
           />
         </div>

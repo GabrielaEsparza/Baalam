@@ -345,7 +345,7 @@ function Chips({ value, onChange, options, allLabel }: { value: string; onChange
           onClick={() => onChange(o)}
           className={cx(
             "h-10 shrink-0 rounded-full border px-4 text-sm font-semibold",
-            value === o ? "border-fire bg-fire text-white" : "border-line bg-surface text-ink-2",
+            value === o ? "border-fire-fill bg-fire-fill text-on-fire" : "border-line bg-surface text-ink-2",
           )}
         >
           {o ? tr(o) : allLabel}

@@ -9,7 +9,7 @@ export function cx(...c: (string | false | null | undefined)[]) {
 type Variant = "primary" | "secondary" | "dark" | "ghost" | "danger";
 const variants: Record<Variant, string> = {
   // Solo un primario (fire-600) por pantalla.
-  primary: "bg-fire-600 text-white hover:brightness-110 active:brightness-95",
+  primary: "bg-fire-600 text-on-fire hover:brightness-105 active:brightness-95",
   secondary: "bg-surface text-ink border border-line hover:bg-surface-2",
   dark: "bg-night text-white hover:bg-purple dark:bg-surface-2 dark:border dark:border-line",
   ghost: "bg-transparent text-ink hover:bg-surface-2",
@@ -101,7 +101,7 @@ export function Tabs<T extends string>({
           onClick={() => onChange(o.value)}
           className={cx(
             "h-10 flex-1 rounded-[9px] text-sm font-semibold transition duration-150",
-            value === o.value ? "bg-fire text-white" : "text-ink-2 hover:text-ink",
+            value === o.value ? "bg-fire-fill text-on-fire" : "text-ink-2 hover:text-ink",
           )}
         >
           {o.label}

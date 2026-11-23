@@ -29,14 +29,14 @@ export default function CoachHomePage() {
         to="/coach/qr"
         className="flex flex-col items-center gap-4 rounded-card bg-night px-6 py-12 text-center text-white transition hover:opacity-95 dark:bg-surface"
       >
-        <span className="grid size-24 place-items-center rounded-full bg-fire/15">
-          <QrCode className="size-14 text-fire" strokeWidth={1.5} />
+        <span className="grid size-24 place-items-center rounded-full bg-fire-fill/15">
+          <QrCode className="size-14 text-fire-fill" strokeWidth={1.5} />
         </span>
         <span>
           <span className="block font-display text-3xl font-bold uppercase">QR de entrada</span>
           <span className="mt-1 block text-[15px] text-[#B8AEC2]">Ábrelo en la pantalla de recepción para que registren su asistencia.</span>
         </span>
-        <span className="inline-flex h-12 items-center rounded-btn bg-fire px-6 font-semibold">Abrir QR</span>
+        <span className="inline-flex h-12 items-center rounded-btn bg-fire-fill px-6 font-semibold text-on-fire">Abrir QR</span>
       </Link>
     </div>
   );

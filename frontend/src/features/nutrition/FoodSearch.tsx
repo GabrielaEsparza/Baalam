@@ -166,7 +166,7 @@ export function FoodSearchSheet({
                     onClick={() => setSource(v)}
                     className={cx(
                       "h-9 rounded-full border px-3.5 text-sm font-semibold",
-                      source === v ? "border-fire bg-fire text-white" : "border-line text-ink-2",
+                      source === v ? "border-fire-fill bg-fire-fill text-on-fire" : "border-line text-ink-2",
                     )}
                   >
                     {l}
@@ -223,7 +223,7 @@ export function FoodSearchSheet({
                     role="tab"
                     aria-selected={quickTab === v}
                     onClick={() => setQuickTab(v)}
-                    className={cx("h-10 flex-1 rounded-[9px] text-sm font-semibold", quickTab === v ? "bg-fire text-white" : "text-ink-2")}
+                    className={cx("h-10 flex-1 rounded-[9px] text-sm font-semibold", quickTab === v ? "bg-fire-fill text-on-fire" : "text-ink-2")}
                   >
                     {l}
                   </button>

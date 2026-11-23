@@ -8,8 +8,10 @@
   --night: #120a1c;
   --purple: #5b2a86;
   --orchid: #b04f9b;
-  --fire: #e05a00;
-  --fire-600: #c94f00;
+  --fire: #8f6000; /* dorado oscuro: legible sobre fondo claro */
+  --fire-fill: #f0ae2e; /* amarillo del logo */
+  --fire-600: #eba526;
+  --on-fire: #120a1c; /* texto sobre amarillo */
   --gold: #e0a32e;
   --bg: #faf8fb;
   --surface: #ffffff;
@@ -43,7 +45,7 @@
   --border: #3a2b48;
   --text: #f5f0f8;
   --text-2: #b8aec2;
-  --fire: #ff6a13;
+  --fire: #f5b83a;
   --orchid: #d07bc0;
   --success: #3dcb7a;
   --warning: #f2b33d;
@@ -65,6 +67,8 @@
   --color-orchid: var(--orchid);
   --color-fire: var(--fire);
   --color-fire-600: var(--fire-600);
+  --color-fire-fill: var(--fire-fill);
+  --color-on-fire: var(--on-fire);
   --color-gold: var(--gold);
   --color-bg: var(--bg);
   --color-surface: var(--surface);

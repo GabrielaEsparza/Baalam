@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const COLORS = ["#e05a00", "#e0a32e", "#b04f9b", "#5b2a86", "#ff6a13", "#ffffff"];
+const COLORS = ["#f0ae2e", "#e0a32e", "#b04f9b", "#5b2a86", "#f5c451", "#ffffff"];
 
 /** Lluvia de confeti en canvas, a pantalla completa y sin bloquear toques. Respeta "reducir movimiento". */
 export function Confetti({ duration = 4500, count = 140 }: { duration?: number; count?: number }) {

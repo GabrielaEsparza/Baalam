@@ -173,7 +173,7 @@ export default function RoutineEditor() {
               className={cx(
                 "relative flex h-16 flex-col items-center justify-center rounded-btn border font-bold transition",
                 weekday === i
-                  ? "border-fire bg-fire text-white"
+                  ? "border-fire-fill bg-fire-fill text-on-fire"
                   : booked
                     ? "border-purple bg-purple/10 text-ink"
                     : "border-line text-ink-2",
@@ -183,7 +183,7 @@ export default function RoutineEditor() {
               <span
                 className={cx(
                   "text-[11px] font-semibold",
-                  weekday === i ? "text-white/85" : "text-ink-2",
+                  weekday === i ? "text-on-fire/75" : "text-ink-2",
                 )}
               >
                 {n ? `${n} ej.` : "—"}
@@ -192,7 +192,7 @@ export default function RoutineEditor() {
                 <span
                   className={cx(
                     "absolute right-1 top-1 size-1.5 rounded-full",
-                    weekday === i ? "bg-white" : "bg-fire",
+                    weekday === i ? "bg-on-fire" : "bg-fire",
                   )}
                 />
               )}
