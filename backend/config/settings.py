@@ -58,6 +58,11 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# App de Android (TWA): Digital Asset Links. Huellas SHA-256 separadas por coma:
+# la de la llave de subida y la de "Firma de apps de Google Play" (Play Console → Integridad de la app).
+ANDROID_PACKAGE = os.environ.get("ANDROID_PACKAGE", "com.lumirasolutionsmx.baalamgym")
+ASSETLINKS_SHA256 = [f.strip().upper() for f in os.environ.get("ASSETLINKS_SHA256", "").split(",") if f.strip()]
+
 # Dominio principal: "www." + este dominio redirige aquí.
 CANONICAL_HOSTS = [h for h in os.environ.get("CANONICAL_HOSTS", "baalamgym.com").split(",") if h]
 

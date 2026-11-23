@@ -1,0 +1,11 @@
+# Compilados y caches (se regeneran con `bubblewrap build`)
+*.apk
+*.aab
+*.idsig
+.gradle/
+build/
+app/build/
+local.properties
+# Nunca subir llaves de firma
+*.jks
+*.keystore

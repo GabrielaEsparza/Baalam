@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.urls import path, re_path
 from django.views.decorators.csrf import ensure_csrf_cookie
 
@@ -31,7 +31,26 @@ def spa(request):
     return resp
 
 
+def assetlinks(request):
+    """/.well-known/assetlinks.json: Android verifica que la app de la Play Store y esta web son del
+    mismo dueño, y así la abre a pantalla completa (sin barra del navegador)."""
+    data = [
+        {
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+                "namespace": "android_app",
+                "package_name": settings.ANDROID_PACKAGE,
+                "sha256_cert_fingerprints": settings.ASSETLINKS_SHA256,
+            },
+        }
+    ]
+    resp = JsonResponse(data, safe=False)
+    resp["Cache-Control"] = "public, max-age=3600"
+    return resp
+
+
 urlpatterns = [
+    path(".well-known/assetlinks.json", assetlinks),
     path("admin/", admin.site.urls),
     path("api/", api.urls),
 ]
@@ -40,4 +59,4 @@ if settings.DEBUG and not settings.MEDIA_IN_DB:
 else:
     # Producción: fotos guardadas en la base de datos, solo con sesión iniciada.
     urlpatterns += [re_path(r"^media/(?P<path>.+)$", serve_media)]
-urlpatterns += [re_path(r"^(?!api/|admin/|static/|media/).*$", spa)]
+urlpatterns += [re_path(r"^(?!api/|admin/|static/|media/|\.well-known/).*$", spa)]
