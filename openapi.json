@@ -946,6 +946,235 @@
     ]
    }
   },
+  "/api/streaks": {
+   "get": {
+    "operationId": "apps_community_api_my_streaks",
+    "summary": "My Streaks",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "description": "Racha individual (kcal y entrenamientos), compas e invitaciones.",
+    "tags": [
+     "comunidad"
+    ],
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
+  "/api/buddies/search": {
+   "get": {
+    "operationId": "apps_community_api_buddy_search",
+    "summary": "Buddy Search",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "q",
+      "schema": {
+       "default": "",
+       "title": "Q",
+       "type": "string"
+      },
+      "required": false
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response",
+         "type": "array"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "comunidad"
+    ],
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
+  "/api/buddies": {
+   "post": {
+    "operationId": "apps_community_api_buddy_invite",
+    "summary": "Buddy Invite",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "comunidad"
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InviteIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
+  "/api/buddies/{buddy_id}/accept": {
+   "post": {
+    "operationId": "apps_community_api_buddy_accept",
+    "summary": "Buddy Accept",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "buddy_id",
+      "schema": {
+       "title": "Buddy Id",
+       "type": "integer"
+      },
+      "required": true
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "comunidad"
+    ],
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
+  "/api/buddies/{buddy_id}": {
+   "delete": {
+    "operationId": "apps_community_api_buddy_remove",
+    "summary": "Buddy Remove",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "buddy_id",
+      "schema": {
+       "title": "Buddy Id",
+       "type": "integer"
+      },
+      "required": true
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "comunidad"
+    ],
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
+  "/api/buddies/{buddy_id}/nudge": {
+   "post": {
+    "operationId": "apps_community_api_buddy_nudge",
+    "summary": "Buddy Nudge",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "buddy_id",
+      "schema": {
+       "title": "Buddy Id",
+       "type": "integer"
+      },
+      "required": true
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "comunidad"
+    ],
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
   "/api/workouts/today": {
    "get": {
     "operationId": "apps_training_api_workout_today",
@@ -5820,6 +6049,19 @@
      "title"
     ],
     "title": "AnnouncementIO",
+    "type": "object"
+   },
+   "InviteIn": {
+    "properties": {
+     "user_id": {
+      "title": "User Id",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "user_id"
+    ],
+    "title": "InviteIn",
     "type": "object"
    },
    "SetIn": {

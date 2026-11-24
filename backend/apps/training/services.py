@@ -576,6 +576,10 @@ def finish_session(member) -> dict:
     session.total_volume_kg = volume
     session.save()
     ratio = len(done_sets) / planned if planned else 0
+    if done_sets:
+        from apps.community.streaks import notify_trained
+
+        notify_trained(member)
     pts = 0
     if ratio >= WORKOUT_DONE_RATIO:
         a = podium.award(member, PointsLedger.Reason.WORKOUT)

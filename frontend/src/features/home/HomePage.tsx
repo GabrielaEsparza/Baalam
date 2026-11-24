@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarPlus, CheckCircle2, ChevronRight, Dumbbell, Megaphone, Pin, QrCode, Ruler } from "lucide-react";
+import { Apple, CalendarPlus, CheckCircle2, ChevronRight, Dumbbell, Flame, Megaphone, Pin, QrCode, Ruler } from "lucide-react";
+import { useStreaks } from "@/features/streaks/StreaksPage";
 import { BirthdayToast } from "./BirthdayToast";
 import { WaterCard } from "./WaterCard";
 import { api, unwrap } from "@/api/client";
@@ -81,6 +82,8 @@ export default function HomePage() {
           </Link>
         </Card>
       )}
+
+      <StreaksCard />
 
       {/* Días faltantes por reservar */}
       {h.missing_days_week > 0 && (
@@ -188,5 +191,43 @@ export default function HomePage() {
       )}
 
     </div>
+  );
+}
+
+/** Rachas: kcal, entrenamientos y la mejor racha con su gym sis / gym bro. */
+function StreaksCard() {
+  const { data } = useStreaks();
+  if (!data) return null;
+  const best = data.buddies[0];
+  return (
+    <Link to="/app/rachas" className="card block space-y-2 hover:bg-surface-2">
+      <div className="flex items-center justify-between">
+        <p className="t-label flex items-center gap-1.5">
+          <Flame className="size-4 text-fire" /> Tus rachas
+        </p>
+        {data.invites_in.length > 0 ? (
+          <span className="rounded-full bg-fire-fill px-2.5 py-0.5 text-xs font-bold text-on-fire">
+            {data.invites_in.length === 1 ? "1 invitación" : `${data.invites_in.length} invitaciones`}
+          </span>
+        ) : (
+          <ChevronRight className="size-5 text-ink-2" />
+        )}
+      </div>
+      <div className="flex flex-wrap gap-x-5 gap-y-1 text-[15px]">
+        <span className="flex items-center gap-1.5">
+          <Apple className="size-4 text-ink-2" /> <b>{data.kcal.days}</b> kcal
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Dumbbell className="size-4 text-ink-2" /> <b>{data.training.days}</b> entrenos
+        </span>
+        {best ? (
+          <span className="flex items-center gap-1.5">
+            <Flame className="size-4 text-fire" /> <b>{best.streak.days}</b> con {best.person.full_name.split(" ")[0]}
+          </span>
+        ) : (
+          <span className="text-ink-2">Invita a tu gym sis o gym bro</span>
+        )}
+      </div>
+    </Link>
   );
 }

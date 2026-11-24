@@ -12,6 +12,7 @@ const CheckinPage = lazy(() => import("@/features/checkin/CheckinPage"));
 const TrainPage = lazy(() => import("@/features/workout/TrainPage"));
 const ProgressPage = lazy(() => import("@/features/progress/ProgressPage"));
 const PodiumPage = lazy(() => import("@/features/podium/PodiumPage"));
+const StreaksPage = lazy(() => import("@/features/streaks/StreaksPage"));
 const SchedulePage = lazy(() => import("@/features/schedule/SchedulePage"));
 const MembershipPage = lazy(() => import("@/features/membership/MembershipPage"));
 const ProfilePage = lazy(() => import("@/features/profile/ProfilePage"));
@@ -100,6 +101,7 @@ export const router = createBrowserRouter([
           },
           { path: "progreso", element: <S><ProgressPage /></S> },
           { path: "podio", element: <S><PodiumPage /></S> },
+          { path: "rachas", element: <S><StreaksPage /></S> },
           { path: "horarios", element: <S><SchedulePage /></S> },
           { path: "membresia", element: <S><MembershipPage /></S> },
           { path: "nutricion", element: <S><NutritionPage /></S> },

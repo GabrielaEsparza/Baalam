@@ -56,3 +56,53 @@ def update(request, ann_id: int, data: AnnouncementIO):
 def delete(request, ann_id: int):
     Announcement.objects.filter(id=ann_id).delete()
     return {"ok": True}
+
+
+# ---------------- Rachas y gym sis / gym bro ----------------
+
+from config.permissions import member_required  # noqa: E402
+
+from . import streaks  # noqa: E402
+
+
+class InviteIn(Schema):
+    user_id: int
+
+
+@router.get("/streaks", response=dict)
+@member_required
+def my_streaks(request):
+    """Racha individual (kcal y entrenamientos), compas e invitaciones."""
+    return streaks.overview(request.user)
+
+
+@router.get("/buddies/search", response=list[dict])
+@member_required
+def buddy_search(request, q: str = ""):
+    return streaks.search(request.user, q)
+
+
+@router.post("/buddies", response=dict)
+@member_required
+def buddy_invite(request, data: InviteIn):
+    return streaks.invite(request.user, data.user_id)
+
+
+@router.post("/buddies/{buddy_id}/accept", response=dict)
+@member_required
+def buddy_accept(request, buddy_id: int):
+    return streaks.accept(request.user, buddy_id)
+
+
+@router.delete("/buddies/{buddy_id}", response=dict)
+@member_required
+def buddy_remove(request, buddy_id: int):
+    streaks.remove(request.user, buddy_id)
+    return {"ok": True}
+
+
+@router.post("/buddies/{buddy_id}/nudge", response=dict)
+@member_required
+def buddy_nudge(request, buddy_id: int):
+    streaks.nudge_kcal(request.user, buddy_id)
+    return {"ok": True}
