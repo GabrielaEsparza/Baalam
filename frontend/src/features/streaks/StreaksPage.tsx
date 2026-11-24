@@ -16,6 +16,10 @@ export interface Streaks {
   my_label: string;
   kcal: { days: number; today_done: boolean };
   training: { days: number; today_done: boolean; today_is_training: boolean };
+  wildcard: {
+    available_for: string | null; // día que puede cubrir (hoy desde las 10 p. m., o ayer)
+    recent: { date: string; status: "pending" | "approved" | "rejected"; reason: string } | null;
+  };
   buddies: { id: number; person: Person; streak: { days: number; me_today: boolean; them_today: boolean } }[];
   invites_in: { id: number; person: Person }[];
   invites_out: { id: number; person: Person }[];
@@ -94,6 +98,8 @@ export default function StreaksPage() {
           done={data.training.today_done}
         />
       </div>
+
+      <WildcardCard w={data.wildcard} />
 
       {/* Invitaciones recibidas */}
       {data.invites_in.length > 0 && (
@@ -328,5 +334,84 @@ function InviteSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
         </div>
       )}
     </Sheet>
+  );
+}
+
+const REASONS = ["Enfermedad", "Lesión", "Trabajo o escuela", "Viaje", "Otro"];
+
+/** Comodín: 1 por semana para un entrenamiento que no pudo hacer. Lo aprueba la coach. */
+function WildcardCard({ w }: { w: Streaks["wildcard"] }) {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [detail, setDetail] = useState("");
+  const send = useMutation({
+    mutationFn: () =>
+      unwrap(api.POST("/api/wildcards", { body: { reason: detail.trim() ? `${reason}: ${detail.trim()}` : reason } })),
+    onSuccess: () => {
+      toast("Comodín enviado a tu coach 🃏");
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: STREAKS_KEY });
+    },
+    onError: (e) => toast((e as Error).message, "error"),
+  });
+
+  const r = w.recent;
+  if (!w.available_for && !r) return null;
+  const dayLabel = (d: string) => {
+    const today = new Date();
+    const iso = (x: Date) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+    return d === iso(today) ? "hoy" : "ayer";
+  };
+
+  return (
+    <>
+      {w.available_for ? (
+        <Card className="mt-3 flex items-center gap-3 border-gold bg-gold/15">
+          <span className="text-3xl" aria-hidden>🃏</span>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">¿No pudiste entrenar {dayLabel(w.available_for)}?</p>
+            <p className="text-sm text-ink-2">Pide tu comodín (1 por semana). Si tu coach lo aprueba, tu racha sigue.</p>
+          </div>
+          <Button size="sm" onClick={() => setOpen(true)}>
+            Pedir
+          </Button>
+        </Card>
+      ) : r ? (
+        <p
+          className={cx(
+            "mt-3 rounded-card px-4 py-3 text-[15px]",
+            r.status === "approved" ? "bg-success/15" : r.status === "rejected" ? "bg-danger/10" : "bg-surface-2",
+          )}
+        >
+          🃏 Comodín ({r.reason}):{" "}
+          <b>{r.status === "approved" ? "aprobado, tu racha sigue" : r.status === "rejected" ? "no aprobado" : "esperando a tu coach"}</b>
+        </p>
+      ) : null}
+
+      <Sheet open={open} onClose={() => setOpen(false)} title="Pedir comodín">
+        <p className="mb-3 text-[15px] text-ink-2">¿Por qué no pudiste entrenar? Tu coach lo revisa.</p>
+        <div className="mb-3 flex flex-wrap gap-2">
+          {REASONS.map((x) => (
+            <button
+              key={x}
+              onClick={() => setReason(x)}
+              aria-pressed={reason === x}
+              className={cx(
+                "h-10 rounded-full border px-4 text-sm font-semibold",
+                reason === x ? "border-fire-fill bg-fire-fill text-on-fire" : "border-line bg-surface text-ink-2",
+              )}
+            >
+              {x}
+            </button>
+          ))}
+        </div>
+        <Input placeholder="Algo más (opcional)" value={detail} maxLength={120} onChange={(e) => setDetail(e.target.value)} />
+        <Button full className="mt-4" disabled={!reason} loading={send.isPending} onClick={() => send.mutate()}>
+          Enviar a mi coach
+        </Button>
+      </Sheet>
+    </>
   );
 }

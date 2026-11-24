@@ -268,7 +268,7 @@ def delete_account(user, password: str = "", *, by=None) -> None:
     "Cuenta eliminada", sin correo, teléfono ni fecha de nacimiento. La cuenta queda inactiva.
     """
     from apps.checkin.models import CheckIn  # noqa: F401  (se conserva, anonimizada)
-    from apps.community.models import Buddy
+    from apps.community.models import Buddy, Wildcard
     from apps.memberships.models import MembershipRequest
     from apps.nutrition.models import FavoriteFood, FoodLog, NutritionGoal, QuickHide
     from apps.podium.models import PodiumMonth, PointsLedger
@@ -297,7 +297,7 @@ def delete_account(user, password: str = "", *, by=None) -> None:
         (QuickHide, "member"), (NutritionGoal, "member"), (WaterLog, "member"), (PushSubscription, "user"),
         (ReminderPrefs, "user"), (SentReminder, "user"), (FcmDevice, "user"), (PointsLedger, "member"), (DaySwap, "member"),
         (WorkoutSession, "member"), (ScheduledWorkout, "member"), (RoutineTemplate, "member"),
-        (MembershipRequest, "member"), (WaitlistEntry, "member"), (Buddy, "from_user"), (Buddy, "to_user"),
+        (MembershipRequest, "member"), (WaitlistEntry, "member"), (Buddy, "from_user"), (Buddy, "to_user"), (Wildcard, "member"),
     ):
         model.objects.filter(**{field: user}).delete()
 

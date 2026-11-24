@@ -1175,6 +1175,46 @@
     ]
    }
   },
+  "/api/wildcards": {
+   "post": {
+    "operationId": "apps_community_api_wildcard_request",
+    "summary": "Wildcard Request",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "description": "Pide un comodín (1 por semana) para el entrenamiento que no pudo hacer.",
+    "tags": [
+     "comunidad"
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WildcardIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
   "/api/workouts/today": {
    "get": {
     "operationId": "apps_training_api_workout_today",
@@ -3777,6 +3817,87 @@
     ]
    }
   },
+  "/api/coach/wildcards": {
+   "get": {
+    "operationId": "apps_community_api_wildcards_pending",
+    "summary": "Wildcards Pending",
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response",
+         "type": "array"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "coach"
+    ],
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
+  "/api/coach/wildcards/{wildcard_id}/decide": {
+   "post": {
+    "operationId": "apps_community_api_wildcard_decide",
+    "summary": "Wildcard Decide",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wildcard_id",
+      "schema": {
+       "title": "Wildcard Id",
+       "type": "integer"
+      },
+      "required": true
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response",
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "tags": [
+     "coach"
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DecideIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "security": [
+     {
+      "SessionAuth": []
+     }
+    ]
+   }
+  },
   "/api/coach/exercises/catalog": {
    "get": {
     "operationId": "apps_training_api_catalog",
@@ -6064,6 +6185,19 @@
     "title": "InviteIn",
     "type": "object"
    },
+   "WildcardIn": {
+    "properties": {
+     "reason": {
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "required": [
+     "reason"
+    ],
+    "title": "WildcardIn",
+    "type": "object"
+   },
    "SetIn": {
     "properties": {
      "item_id": {
@@ -7442,6 +7576,19 @@
      "session_id"
     ],
     "title": "CoachBookingIn",
+    "type": "object"
+   },
+   "DecideIn": {
+    "properties": {
+     "approve": {
+      "title": "Approve",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "approve"
+    ],
+    "title": "DecideIn",
     "type": "object"
    },
    "CustomIn": {

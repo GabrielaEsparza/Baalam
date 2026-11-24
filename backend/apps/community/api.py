@@ -106,3 +106,30 @@ def buddy_remove(request, buddy_id: int):
 def buddy_nudge(request, buddy_id: int):
     streaks.nudge_kcal(request.user, buddy_id)
     return {"ok": True}
+
+
+class WildcardIn(Schema):
+    reason: str
+
+
+class DecideIn(Schema):
+    approve: bool
+
+
+@router.post("/wildcards", response=dict)
+@member_required
+def wildcard_request(request, data: WildcardIn):
+    """Pide un comodín (1 por semana) para el entrenamiento que no pudo hacer."""
+    return streaks.request_wildcard(request.user, data.reason)
+
+
+@coach_router.get("/wildcards", response=list[dict])
+@coach_required
+def wildcards_pending(request):
+    return streaks.pending_wildcards()
+
+
+@coach_router.post("/wildcards/{wildcard_id}/decide", response=dict)
+@coach_required
+def wildcard_decide(request, wildcard_id: int, data: DecideIn):
+    return streaks.decide_wildcard(request.user, wildcard_id, data.approve)

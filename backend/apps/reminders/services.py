@@ -380,6 +380,21 @@ def due_for(user, feats, at: datetime) -> list[tuple[str, str, dict]]:
                 {"title": "¿Ya entrenaste hoy?", "body": f"Aún no registras tu rutina: {brief['title']}. ¡Tú puedes!", "url": "/app/entrenar", "tag": "workout"},
             ))
 
+    if at.hour >= 22:
+        from apps.community.streaks import wildcard_offer_day
+
+        if wildcard_offer_day(user) == t:
+            out.append((
+                "wildcard",
+                t.isoformat(),
+                {
+                    "title": "¿No pudiste entrenar hoy? 🃏",
+                    "body": "Pide tu comodín (1 por semana) y tu coach lo revisa. Así no pierdes tu racha.",
+                    "url": "/app/rachas",
+                    "tag": "wildcard",
+                },
+            ))
+
     if p.water:
         slot = max((h for h in WATER_HOURS if h <= at.hour), default=None)
         if slot is not None and at - datetime.combine(t, time(slot), at.tzinfo) < timedelta(hours=1):

@@ -555,6 +555,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/wildcards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Wildcard Request
+         * @description Pide un comodín (1 por semana) para el entrenamiento que no pudo hacer.
+         */
+        post: operations["apps_community_api_wildcard_request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/workouts/today": {
         parameters: {
             query?: never;
@@ -1557,6 +1577,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/coach/wildcards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wildcards Pending */
+        get: operations["apps_community_api_wildcards_pending"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/coach/wildcards/{wildcard_id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Wildcard Decide */
+        post: operations["apps_community_api_wildcard_decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/coach/exercises/catalog": {
         parameters: {
             query?: never;
@@ -2302,6 +2356,11 @@ export interface components {
             /** User Id */
             user_id: number;
         };
+        /** WildcardIn */
+        WildcardIn: {
+            /** Reason */
+            reason: string;
+        };
         /** SetIn */
         SetIn: {
             /** Item Id */
@@ -2772,6 +2831,11 @@ export interface components {
             member_id: number;
             /** Session Id */
             session_id: number;
+        };
+        /** DecideIn */
+        DecideIn: {
+            /** Approve */
+            approve: boolean;
         };
         /** CustomIn */
         CustomIn: {
@@ -3688,6 +3752,32 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_community_api_wildcard_request: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WildcardIn"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -5366,6 +5456,56 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    apps_community_api_wildcards_pending: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+        };
+    };
+    apps_community_api_wildcard_decide: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wildcard_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecideIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
             };
         };
     };

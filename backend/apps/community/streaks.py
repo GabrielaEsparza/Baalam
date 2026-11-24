@@ -9,21 +9,27 @@
   dentro de su meta y, si les tocaba entrenar, entrenaron. Cuenta desde que aceptaron.
 
 Hoy suma en cuanto se cumple; si todavía no, la racha no se rompe hasta que termine el día.
+
+Comodín: si a las 10 p. m. no ha registrado su entrenamiento de hoy (o no lo hizo ayer), puede pedir
+un comodín (1 por semana) diciendo por qué. La coach lo aprueba: ese día cuenta como entrenado.
+Mientras está por aprobar, ese día no rompe la racha.
 """
 from datetime import date, timedelta
 
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Q, Sum
 
 from apps.accounts.models import Profile
 from apps.accounts.services import ServiceError, ensure_member, get_profile
-from apps.common import today
+from apps.common import now, today, week_bounds
 
-from .models import Buddy
+from .models import Buddy, Wildcard
 
 KCAL_TOLERANCE = 1.10
 LOOKBACK_DAYS = 400
 MAX_PENDING_INVITES = 30
+WILDCARD_HOUR = 22  # desde las 10 p. m. se ofrece el comodín del día
 
 
 # ---------------- Cálculo ----------------
@@ -33,13 +39,13 @@ def _days_back(start: date, end: date) -> list[date]:
     return [end - timedelta(days=i) for i in range(n + 1)]
 
 
-def _count(relevant_desc: list[date], ok: set[date], t: date) -> int:
-    """Seguidos hacia atrás. Hoy, si aún no se cumple, no rompe (el día no ha terminado)."""
+def _count(relevant_desc: list[date], ok: set[date], t: date, skip: set[date] = frozenset()) -> int:
+    """Seguidos hacia atrás. Hoy (si aún no se cumple) y los comodines por aprobar no rompen."""
     n = 0
     for d in relevant_desc:
         if d in ok:
             n += 1
-        elif d == t:
+        elif d == t or d in skip:
             continue
         else:
             break
@@ -55,8 +61,25 @@ def _kcal_ok_days(member, start: date, end: date) -> set[date]:
     return {r["date"] for r in rows if limit is None or (r["k"] or 0) <= limit}
 
 
+def _wildcards(member, start: date, end: date) -> tuple[set[date], set[date]]:
+    """(días con comodín aprobado, días con comodín por aprobar)."""
+    rows = Wildcard.objects.filter(member=member, date__range=(start, end)).values_list("date", "status")
+    return (
+        {d for d, s in rows if s == Wildcard.Status.APPROVED},
+        {d for d, s in rows if s == Wildcard.Status.PENDING},
+    )
+
+
+def _training(member, start: date, end: date) -> tuple[set[date], set[date], set[date]]:
+    """(días de entrenamiento, días cumplidos —con comodín aprobado—, días con comodín por aprobar)."""
+    training, done = _training_days(member, start, end)
+    approved, pending = _wildcards(member, start, end)
+    return training, done | approved, pending
+
+
 def _training_days(member, start: date, end: date) -> tuple[set[date], set[date]]:
-    """(días en que le tocaba entrenar, días en que registró su entrenamiento)."""
+    """(días en que le tocaba entrenar, días en que registró su entrenamiento).
+    Con rutina cuenta registrar la rutina aunque no haya escaneado el QR (p. ej. si entrenó fuera del gym)."""
     from apps.checkin.models import CheckIn
     from apps.memberships.services import current_membership
     from apps.schedule.models import Booking
@@ -78,33 +101,63 @@ def _training_days(member, start: date, end: date) -> tuple[set[date], set[date]
     return booked | done, done
 
 
-def _day_ok(member, start: date, end: date) -> set[date]:
-    """Días en que cumplió: kcal dentro de su meta y, si le tocaba, entrenó."""
+def _day_ok(member, start: date, end: date) -> tuple[set[date], set[date]]:
+    """(días en que cumplió: kcal dentro de su meta y, si le tocaba, entrenó; días con comodín por aprobar)."""
     kcal = _kcal_ok_days(member, start, end)
-    training, done = _training_days(member, start, end)
-    return {d for d in kcal if d not in training or d in done}
+    training, done, pending = _training(member, start, end)
+    return {d for d in kcal if d not in training or d in done}, pending
+
+
+def _week_used(member, d: date) -> bool:
+    start, end = week_bounds(d)
+    return Wildcard.objects.filter(
+        member=member, date__range=(start, end), status__in=[Wildcard.Status.PENDING, Wildcard.Status.APPROVED]
+    ).exists()
+
+
+def _wildcard_day(member, training: set[date], done: set[date]) -> date | None:
+    """Día que puede cubrir con comodín: hoy desde las 10 p. m., o ayer."""
+    from django.utils import timezone
+
+    t = today()
+    candidates = ([t] if timezone.localtime(now()).hour >= WILDCARD_HOUR else []) + [t - timedelta(days=1)]
+    taken = set(Wildcard.objects.filter(member=member, date__in=candidates).values_list("date", flat=True))
+    for d in candidates:
+        if d in training and d not in done and d not in taken and not _week_used(member, d):
+            return d
+    return None
+
+
+def _wildcard_payload(member, training, done) -> dict:
+    recent = Wildcard.objects.filter(member=member, date__gte=today() - timedelta(days=7)).first()
+    return {
+        "available_for": _wildcard_day(member, training, done),
+        "recent": {"date": recent.date, "status": recent.status, "reason": recent.reason} if recent else None,
+    }
 
 
 def individual(member) -> dict:
     t = today()
     start = t - timedelta(days=LOOKBACK_DAYS)
     kcal = _kcal_ok_days(member, start, t)
-    training, done = _training_days(member, start, t)
+    training, done, pending = _training(member, start, t)
     return {
         "kcal": {"days": _count(_days_back(start, t), kcal, t), "today_done": t in kcal},
         "training": {
-            "days": _count(sorted(training, reverse=True), done, t),
+            "days": _count(sorted(training, reverse=True), done, t, pending),
             "today_done": t in done,
             "today_is_training": t in training,
         },
+        "wildcard": _wildcard_payload(member, training, done),
     }
 
 
 def pair_streak(a, b, since: date | None) -> dict:
     t = today()
     start = max(since or t, t - timedelta(days=LOOKBACK_DAYS))
-    ok_a, ok_b = _day_ok(a, start, t), _day_ok(b, start, t)
-    return {"days": _count(_days_back(start, t), ok_a & ok_b, t), "me_today": t in ok_a, "them_today": t in ok_b}
+    (ok_a, pend_a), (ok_b, pend_b) = _day_ok(a, start, t), _day_ok(b, start, t)
+    days = _count(_days_back(start, t), ok_a & ok_b, t, pend_a | pend_b)
+    return {"days": days, "me_today": t in ok_a, "them_today": t in ok_b}
 
 
 # ---------------- Gym sis / gym bro ----------------
@@ -279,3 +332,72 @@ def notify_trained(member) -> None:
             url="/app/rachas",
             tag="buddy-train",
         )
+
+
+# ---------------- Comodín ----------------
+
+def wildcard_offer_day(member) -> date | None:
+    """El día que hoy podría cubrir con comodín (o None). También lo usa el aviso de las 10 p. m."""
+    t = today()
+    training, done, _ = _training(member, t - timedelta(days=1), t)
+    return _wildcard_day(member, training, done)
+
+
+@transaction.atomic
+def request_wildcard(member, reason: str) -> dict:
+    ensure_member(member)
+    reason = (reason or "").strip()[:160]
+    if len(reason) < 3:
+        raise ServiceError("Cuéntale a tu coach por qué no pudiste entrenar.")
+    day = wildcard_offer_day(member)
+    if not day:
+        raise ServiceError("Hoy no tienes comodín disponible (es 1 por semana).", "no_wildcard")
+    w = Wildcard.objects.create(member=member, date=day, reason=reason)
+    name = get_profile(member).full_name
+    coaches = get_user_model().objects.filter(profile__role__in=[Profile.Role.COACH, Profile.Role.ADMIN], is_active=True)
+    for c in coaches:
+        _notify(
+            c,
+            title=f"🃏 {name} pidió un comodín",
+            body=f"Motivo: {reason}. ¿Lo apruebas?",
+            url="/coach",
+            tag=f"wildcard-{w.id}",
+        )
+    return wildcard_row(w)
+
+
+def wildcard_row(w: Wildcard) -> dict:
+    p = get_profile(w.member)
+    return {
+        "id": w.id,
+        "member": {"id": w.member_id, "full_name": p.full_name, "avatar_url": p.avatar.url if p.avatar else None},
+        "date": w.date,
+        "reason": w.reason,
+        "status": w.status,
+        "created_at": w.created_at,
+    }
+
+
+def pending_wildcards() -> list[dict]:
+    qs = Wildcard.objects.filter(status=Wildcard.Status.PENDING, member__is_active=True).select_related("member__profile")
+    return [wildcard_row(w) for w in qs.order_by("created_at")]
+
+
+@transaction.atomic
+def decide_wildcard(coach, wildcard_id: int, approve: bool) -> dict:
+    w = Wildcard.objects.select_for_update().filter(id=wildcard_id).first()
+    if not w:
+        raise ServiceError("Ese comodín ya no existe.", "not_found", 404)
+    if w.status != Wildcard.Status.PENDING:
+        raise ServiceError("Ese comodín ya se había respondido.", "already")
+    w.status = Wildcard.Status.APPROVED if approve else Wildcard.Status.REJECTED
+    w.decided_by, w.decided_at = coach, now()
+    w.save()
+    _notify(
+        w.member,
+        title="Comodín aprobado ✅" if approve else "Comodín no aprobado",
+        body="Tu racha sigue viva. ¡Recupérate!" if approve else "Tu coach no aprobó el comodín. Si tienes dudas, háblale.",
+        url="/app/rachas",
+        tag="wildcard",
+    )
+    return wildcard_row(w)

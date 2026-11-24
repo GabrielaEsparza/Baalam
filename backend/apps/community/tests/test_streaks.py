@@ -116,3 +116,63 @@ class BuddyTests(TestCase):
         streaks.invite(self.a, self.b.id)
         delete_account(self.b, "sentadilla-123")
         self.assertFalse(Buddy.objects.exists())
+
+
+class WildcardTests(TestCase):
+    def setUp(self):
+        from apps.community.models import Wildcard  # noqa: F401
+
+        rutina, _ = make_plans()
+        self.m = make_member()
+        pay(self.m, rutina)
+        self.coach = make_member("coach@t.mx")
+        set_role(self.coach, "coach")
+        self.sch = Schedule.objects.create(name="Piso", type="open_gym", weekdays=list(range(7)), start_time=time(23, 0))
+        t = today()
+        generate_sessions(t - timedelta(days=3), t)
+        for ago in (0, 1, 2, 3):
+            s = Session.objects.get(schedule=self.sch, date=t - timedelta(days=ago))
+            Booking.objects.create(member=self.m, session=s, month=month_key(s.date))
+        for ago in (2, 3):
+            WorkoutSession.objects.create(member=self.m, date=t - timedelta(days=ago), started_at=timezone.now())
+
+    def test_missed_yesterday_request_then_coach_approves(self):
+        ind = streaks.individual(self.m)
+        self.assertEqual(ind["training"]["days"], 0)  # ayer no entrenó: se rompió
+        self.assertEqual(ind["wildcard"]["available_for"], today() - timedelta(days=1))
+        with self.assertRaises(ServiceError):
+            streaks.request_wildcard(self.m, "")  # hay que decir por qué
+        w = streaks.request_wildcard(self.m, "Enfermedad")
+        self.assertEqual(streaks.individual(self.m)["training"]["days"], 2)  # por aprobar: no rompe
+        self.assertEqual([r["id"] for r in streaks.pending_wildcards()], [w["id"]])
+        streaks.decide_wildcard(self.coach, w["id"], True)
+        self.assertEqual(streaks.individual(self.m)["training"]["days"], 3)  # aprobado: cuenta
+        with self.assertRaises(ServiceError):
+            streaks.decide_wildcard(self.coach, w["id"], False)
+
+    def test_one_per_week_and_rejected_breaks(self):
+        from unittest import mock
+
+        w = streaks.request_wildcard(self.m, "Lesión")
+        streaks.decide_wildcard(self.coach, w["id"], False)
+        self.assertEqual(streaks.individual(self.m)["training"]["days"], 0)
+        late = timezone.localtime().replace(hour=22, minute=30)
+        with mock.patch("apps.community.streaks.now", return_value=late):
+            day = streaks.wildcard_offer_day(self.m)
+            same_week = streaks.week_bounds(day)[0] == streaks.week_bounds(today() - timedelta(days=1))[0]
+            # el rechazado no gasta el comodín de la semana
+            self.assertEqual(day, today())
+            w2 = streaks.request_wildcard(self.m, "Trabajo")
+            self.assertEqual(w2["date"], today())
+            if same_week:
+                self.assertIsNone(streaks.wildcard_offer_day(self.m))
+
+    def test_coach_endpoints_and_member_cannot_decide(self):
+        w = streaks.request_wildcard(self.m, "Enfermedad")
+        self.client.force_login(self.m)
+        r = self.client.post(f"/api/coach/wildcards/{w['id']}/decide", {"approve": True}, content_type="application/json")
+        self.assertEqual(r.status_code, 403)
+        self.client.force_login(self.coach)
+        self.assertEqual(len(self.client.get("/api/coach/wildcards").json()), 1)
+        r = self.client.post(f"/api/coach/wildcards/{w['id']}/decide", {"approve": True}, content_type="application/json")
+        self.assertEqual(r.json()["status"], "approved")

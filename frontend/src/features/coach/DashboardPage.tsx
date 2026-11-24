@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, ChevronRight, QrCode, UserCheck } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarDays, Check, ChevronRight, QrCode, UserCheck, X } from "lucide-react";
+import { Avatar } from "@/components/Avatar";
+import { useToast } from "@/components/ui/toast";
 import { CoachStats } from "./CoachStats";
 import { api, unwrap } from "@/api/client";
 import { useMe } from "@/app/session";
 import type { MemberRow } from "@/api/types";
-import { Card, ErrorBox, PageTitle, SectionTitle, Spinner, StatusBadge } from "@/components/ui";
+import { Button, Card, ErrorBox, PageTitle, SectionTitle, Spinner, StatusBadge } from "@/components/ui";
 import { fmtDate, fmtTime } from "@/lib/format";
 
 /** `live`: se actualiza cada minuto mientras la pantalla está visible (solo "Asistencias de hoy"). */
@@ -38,7 +40,75 @@ export default function CoachHomePage() {
         </span>
         <span className="inline-flex h-12 items-center rounded-btn bg-fire-fill px-6 font-semibold text-on-fire">Abrir QR</span>
       </Link>
+      <PendingWildcards />
     </div>
+  );
+}
+
+type WildcardRow = {
+  id: number;
+  member: { id: number; full_name: string; avatar_url: string | null };
+  date: string;
+  reason: string;
+};
+
+/** Comodines que piden los miembros cuando no pudieron entrenar (enfermedad, etc.). */
+function PendingWildcards() {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const { data } = useQuery({
+    queryKey: ["coach", "wildcards"],
+    queryFn: async () => (await unwrap(api.GET("/api/coach/wildcards"))) as unknown as WildcardRow[],
+    refetchInterval: 60_000,
+  });
+  const decide = useMutation({
+    mutationFn: ({ id, approve }: { id: number; approve: boolean }) =>
+      unwrap(api.POST("/api/coach/wildcards/{wildcard_id}/decide", { params: { path: { wildcard_id: id } }, body: { approve } })),
+    onSuccess: (_, v) => {
+      toast(v.approve ? "Comodín aprobado" : "Comodín rechazado");
+      qc.invalidateQueries({ queryKey: ["coach", "wildcards"] });
+    },
+    onError: (e) => toast((e as Error).message, "error"),
+  });
+  if (!data?.length) return null;
+  return (
+    <>
+      <SectionTitle>🃏 Comodines por aprobar</SectionTitle>
+      <Card className="divide-y divide-line p-0">
+        {data.map((w) => (
+          <div key={w.id} className="space-y-2 px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Avatar url={w.member.avatar_url} name={w.member.full_name} size={40} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">{w.member.full_name}</p>
+                <p className="text-sm text-ink-2">
+                  {fmtDate(w.date, { weekday: "long", day: "numeric", month: "short" })} · {w.reason}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={X}
+                loading={decide.isPending && decide.variables?.id === w.id && !decide.variables.approve}
+                onClick={() => decide.mutate({ id: w.id, approve: false })}
+              >
+                Rechazar
+              </Button>
+              <Button
+                size="sm"
+                icon={Check}
+                loading={decide.isPending && decide.variables?.id === w.id && decide.variables.approve}
+                onClick={() => decide.mutate({ id: w.id, approve: true })}
+              >
+                Aprobar
+              </Button>
+            </div>
+          </div>
+        ))}
+      </Card>
+    </>
   );
 }
 

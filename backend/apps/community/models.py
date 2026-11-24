@@ -39,3 +39,25 @@ class Buddy(TimeStamped):
 
     def other(self, user):
         return self.to_user if self.from_user_id == user.id else self.from_user
+
+
+class Wildcard(TimeStamped):
+    """Comodín: un día de entrenamiento que no pudo hacer (enfermedad, etc.). 1 por semana y lo aprueba la coach."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Por aprobar"
+        APPROVED = "approved", "Aprobado"
+        REJECTED = "rejected", "Rechazado"
+
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="wildcards")
+    date = models.DateField(help_text="El día que cubre")
+    reason = models.CharField(max_length=160)
+    status = models.CharField(max_length=8, choices=Status.choices, default=Status.PENDING)
+    decided_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["member", "date"], name="uniq_wildcard_day")]
+        verbose_name = "comodín"
+        verbose_name_plural = "comodines"
