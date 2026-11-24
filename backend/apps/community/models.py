@@ -61,3 +61,16 @@ class Wildcard(TimeStamped):
         constraints = [models.UniqueConstraint(fields=["member", "date"], name="uniq_wildcard_day")]
         verbose_name = "comodín"
         verbose_name_plural = "comodines"
+
+
+class StreakMilestone(TimeStamped):
+    """Alguien cumplió 1, 2, 3… meses de racha: se anuncia a todo el gym."""
+
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="streak_milestones")
+    months = models.PositiveSmallIntegerField()
+    reached_on = models.DateField()
+
+    class Meta:
+        ordering = ["-reached_on"]
+        verbose_name = "racha de un mes o más"
+        verbose_name_plural = "rachas de un mes o más"

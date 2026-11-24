@@ -25,12 +25,14 @@ from apps.accounts.models import Profile
 from apps.accounts.services import ServiceError, ensure_member, get_profile
 from apps.common import now, today, week_bounds
 
-from .models import Buddy, Wildcard
+from .models import Buddy, StreakMilestone, Wildcard
 
 KCAL_TOLERANCE = 1.10
 LOOKBACK_DAYS = 400
 MAX_PENDING_INVITES = 30
 WILDCARD_HOUR = 22  # desde las 10 p. m. se ofrece el comodín del día
+MONTH_DAYS = 30  # cada 30 días de racha general se anuncia a todo el gym
+SHOW_MILESTONE_DAYS = 3  # cuántos días se ve el anuncio en Inicio
 
 
 # ---------------- Cálculo ----------------
@@ -143,8 +145,10 @@ def individual(member) -> dict:
     kcal = _kcal_ok_days(member, start, t)
     training, done, pending = _training(member, start, t)
     day_ok = {d for d in kcal if d not in training or d in done}  # cumplió el día completo
+    overall = _count(_days_back(start, t), day_ok, t, pending)
+    check_milestone(member, overall)
     return {
-        "overall": {"days": _count(_days_back(start, t), day_ok, t, pending), "today_done": t in day_ok},
+        "overall": {"days": overall, "today_done": t in day_ok},
         "kcal": {"days": _count(_days_back(start, t), kcal, t), "today_done": t in kcal},
         "training": {
             "days": _count(sorted(training, reverse=True), done, t, pending),
@@ -404,3 +408,79 @@ def decide_wildcard(coach, wildcard_id: int, approve: bool) -> dict:
         tag="wildcard",
     )
     return wildcard_row(w)
+
+
+# ---------- 1 mes de racha: se anuncia a todos ----------
+
+def _months_label(n: int) -> str:
+    return "1 mes" if n == 1 else f"{n} meses"
+
+
+def check_milestone(member, overall_days: int) -> StreakMilestone | None:
+    """Si su racha general llegó a 30, 60, 90… días, lo registra una vez y avisa a todo el gym."""
+    months = overall_days // MONTH_DAYS
+    if months < 1:
+        return None
+    t = today()
+    # Mismo hito dentro de esta racha (empezó hace `overall_days` días): ya se anunció.
+    if StreakMilestone.objects.filter(
+        member=member, months=months, reached_on__gte=t - timedelta(days=overall_days)
+    ).exists():
+        return None
+    m = StreakMilestone.objects.create(member=member, months=months, reached_on=t)
+    transaction.on_commit(lambda: _safe(_announce, m))
+    return m
+
+
+def _announce(m: StreakMilestone) -> None:
+    from apps.reminders.services import send
+
+    p = get_profile(m.member)
+    what = _months_label(m.months)
+    send(m.member, title=f"🔥 ¡Llevas {what} de racha!", body="Todo el gym lo va a ver. ¡Sigue así!", url="/app/rachas", tag="milestone")
+    if not p.show_in_podium:  # se ocultó del podio: no se anuncia su nombre
+        return
+    everyone = get_user_model().objects.filter(is_active=True).exclude(id=m.member_id).exclude(
+        profile__status=Profile.Status.BLOCKED
+    )
+    for u in everyone:
+        _safe(
+            send,
+            u,
+            title=f"🔥 {p.full_name} lleva {what} de racha",
+            body="¡Felicítala cuando la veas en el gym!" if p.greeting == "a" else "¡Felicítalo cuando lo veas en el gym!" if p.greeting == "o" else "¡Felicítale cuando le veas en el gym!",
+            url="/app",
+            tag=f"milestone-{m.id}",
+        )
+
+
+def recent_milestones(viewer) -> list[dict]:
+    """Para Inicio: quién cumplió 1 mes (o más) de racha en los últimos días."""
+    since = today() - timedelta(days=SHOW_MILESTONE_DAYS - 1)
+    qs = StreakMilestone.objects.filter(reached_on__gte=since, member__is_active=True).select_related("member__profile")
+    out = []
+    for m in qs:
+        p = m.member.profile
+        mine = m.member_id == viewer.id
+        if not (mine or p.show_in_podium):
+            continue
+        out.append(
+            {
+                "member_id": m.member_id,
+                "full_name": p.full_name,
+                "avatar_url": p.avatar.url if p.avatar else None,
+                "months": m.months,
+                "is_me": mine,
+            }
+        )
+    return out
+
+
+def sweep_milestones() -> int:
+    """Revisa a todos los miembros activos (aunque no abran la app). Corre cada hora."""
+    n = 0
+    for p in Profile.objects.filter(role=Profile.Role.MEMBER, status=Profile.Status.ACTIVE, user__is_active=True).select_related("user"):
+        before = StreakMilestone.objects.count()
+        _safe(individual, p.user)
+        n += StreakMilestone.objects.count() - before
+    return n

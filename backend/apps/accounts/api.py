@@ -271,11 +271,18 @@ def home(request):
         "today_workout": today_workout_brief(user) if feats["routine"] else None,
         "announcements": feed(),
         "birthdays": services.birthdays_today(user),
+        "streak_stars": _streak_stars(user),
         "whatsapp": GymSettings.load().whatsapp,
         "water": water_today(user) if feats["access"] else None,
         "measures_due_days": measures_due(user) if feats["access"] else None,
         "measures_never": measures_never(user) if feats["access"] else False,
     }
+
+
+def _streak_stars(user) -> list[dict]:
+    from apps.community.streaks import recent_milestones
+
+    return recent_milestones(user)
 
 
 # ---------------- Coach: miembros y panel ----------------

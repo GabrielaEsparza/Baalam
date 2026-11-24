@@ -5253,6 +5253,15 @@
       "default": false,
       "title": "Measures Never",
       "type": "boolean"
+     },
+     "streak_stars": {
+      "default": [],
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Streak Stars",
+      "type": "array"
      }
     },
     "required": [

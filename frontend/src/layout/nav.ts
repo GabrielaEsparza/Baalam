@@ -48,7 +48,7 @@ export function buildNav(f: Me["features"]): NavItem[] {
 export function moreItems(f: Me["features"]): NavItem[] {
   const items: NavItem[] = [
     { to: "/app/perfil", label: "Mi perfil", icon: User },
-    { to: "/app/rachas", label: "Rachas y gym sis", icon: Flame },
+    { to: "/app/rachas", label: "Rachas", icon: Flame },
     { to: "/app/nutricion", label: "Nutrición", icon: Apple },
   ];
   if (f.open_gym || f.classes) items.push({ to: "/app/horarios", label: "Horarios", icon: CalendarDays });

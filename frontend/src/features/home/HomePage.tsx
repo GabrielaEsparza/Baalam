@@ -85,6 +85,20 @@ export default function HomePage() {
 
       <StreaksCard />
 
+      {/* 1 mes (o más) de racha: lo ve todo el gym */}
+      {(h.streak_stars as StreakStar[]).map((s) => (
+        <section key={`${s.member_id}-${s.months}`} className="animate-pop flex items-center gap-3 rounded-card border border-gold bg-gold/15 px-4 py-3">
+          <Avatar url={s.avatar_url} name={s.full_name} size={48} />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">
+              {s.is_me ? "¡Llevas" : <>{s.full_name} lleva</>} {s.months === 1 ? "1 mes" : `${s.months} meses`} de racha{s.is_me ? "!" : ""}
+            </p>
+            <p className="text-sm text-ink-2">{s.is_me ? "Todo el gym lo está viendo. ¡Sigue así!" : "Cumplió todos los días. ¡Felicítale!"}</p>
+          </div>
+          <Flame className="size-9 shrink-0 fill-fire-fill text-fire" strokeWidth={1.75} aria-hidden />
+        </section>
+      ))}
+
       {/* Días faltantes por reservar */}
       {h.missing_days_week > 0 && (
         <Link to="/app/horarios" className="card flex items-center gap-3 hover:bg-surface-2">
@@ -193,6 +207,8 @@ export default function HomePage() {
     </div>
   );
 }
+
+type StreakStar = { member_id: number; full_name: string; avatar_url: string | null; months: number; is_me: boolean };
 
 /** Rachas: kcal, entrenamientos y la mejor racha con su gym sis / gym bro. */
 function StreaksCard() {

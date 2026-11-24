@@ -113,6 +113,7 @@ class HomeOut(Schema):
     water: dict | None = None  # {ml, goal_ml}
     measures_due_days: int | None = None  # días sin registrar peso/medidas (≥ 30)
     measures_never: bool = False  # nunca ha registrado peso ni medidas
+    streak_stars: list[dict] = []  # quién cumplió 1 mes (o más) de racha en los últimos días
 
 
 # ----- Coach -----

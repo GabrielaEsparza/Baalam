@@ -441,6 +441,10 @@ def due_for(user, feats, at: datetime) -> list[tuple[str, str, dict]]:
 def run_due(at: datetime | None = None) -> int:
     at = at or now()
     n = 0
+    if at.minute < 10:  # una vez por hora: ¿alguien cumplió 1 mes de racha?
+        from apps.community.streaks import sweep_milestones
+
+        sweep_milestones()
     for user, feats in _members_with_push():
         for kind, ref, msg in due_for(user, feats, at):
             n += send_once(user, kind, ref, **msg)

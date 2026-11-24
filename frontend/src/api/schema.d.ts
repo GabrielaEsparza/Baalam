@@ -2065,6 +2065,13 @@ export interface components {
              * @default false
              */
             measures_never: boolean;
+            /**
+             * Streak Stars
+             * @default []
+             */
+            streak_stars: {
+                [key: string]: unknown;
+            }[];
         };
         /** SessionBrief */
         SessionBrief: {

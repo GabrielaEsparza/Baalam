@@ -176,3 +176,28 @@ class WildcardTests(TestCase):
         self.assertEqual(len(self.client.get("/api/coach/wildcards").json()), 1)
         r = self.client.post(f"/api/coach/wildcards/{w['id']}/decide", {"approve": True}, content_type="application/json")
         self.assertEqual(r.json()["status"], "approved")
+
+
+class MilestoneTests(TestCase):
+    def setUp(self):
+        rutina, _ = make_plans()
+        self.m = make_member()
+        self.other = make_member("otra@t.mx")
+        for u in (self.m, self.other):
+            pay(u, rutina)
+        for ago in range(1, 31):  # 30 días seguidos registrando kcal (sin días de entrenamiento)
+            eat(self.m, ago, 1500)
+
+    def test_one_month_is_announced_once_and_respects_hidden_podium(self):
+        from apps.community.models import StreakMilestone
+
+        self.assertEqual(streaks.individual(self.m)["overall"]["days"], 30)
+        streaks.individual(self.m)
+        streaks.sweep_milestones()
+        self.assertEqual(StreakMilestone.objects.filter(member=self.m, months=1).count(), 1)
+        stars = streaks.recent_milestones(self.other)
+        self.assertEqual([(s["member_id"], s["months"], s["is_me"]) for s in stars], [(self.m.id, 1, False)])
+        self.m.profile.show_in_podium = False
+        self.m.profile.save()
+        self.assertEqual(streaks.recent_milestones(self.other), [])
+        self.assertTrue(streaks.recent_milestones(self.m)[0]["is_me"])  # ella sí lo ve
