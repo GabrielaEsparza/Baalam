@@ -32,7 +32,7 @@ LOOKBACK_DAYS = 400
 MAX_PENDING_INVITES = 30
 WILDCARD_HOUR = 22  # desde las 10 p. m. se ofrece el comodín del día
 MONTH_DAYS = 30  # cada 30 días de racha general se anuncia a todo el gym
-SHOW_MILESTONE_DAYS = 3  # cuántos días se ve el anuncio en Inicio
+SHOW_MILESTONE_DAYS = 1  # el anuncio se ve en Inicio solo el día que lo logró
 
 
 # ---------------- Cálculo ----------------
