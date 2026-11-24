@@ -14,6 +14,7 @@ export interface Person {
 }
 export interface Streaks {
   my_label: string;
+  overall: { days: number; today_done: boolean }; // kcal y, si tocaba, entrenar
   kcal: { days: number; today_done: boolean };
   training: { days: number; today_done: boolean; today_is_training: boolean };
   wildcard: {
@@ -76,6 +77,14 @@ export default function StreaksPage() {
       </PageTitle>
 
       {/* Racha individual */}
+      <Card className="mb-3 flex items-center gap-4">
+        <BigFlame days={data.overall.days} />
+        <p className="text-[15px] text-ink-2">
+          {data.overall.today_done
+            ? "Hoy ya cumpliste ✓"
+            : "Cumple hoy: registra tus kcal sin pasarte y, si te toca, entrena."}
+        </p>
+      </Card>
       <div className="grid grid-cols-2 gap-3">
         <StreakTile
           icon={Apple}
@@ -219,6 +228,26 @@ export default function StreaksPage() {
       </p>
 
       <InviteSheet open={inviting} onClose={() => setInviting(false)} />
+    </div>
+  );
+}
+
+/** El fueguito grande: "5 días de racha". Gris si está en 0. */
+export function BigFlame({ days: n, size = "lg" }: { days: number; size?: "lg" | "sm" }) {
+  const lit = n > 0;
+  return (
+    <div className="flex shrink-0 items-center gap-2">
+      <Flame
+        className={cx(size === "lg" ? "size-12" : "size-7", lit ? "fill-fire-fill text-fire" : "text-ink-2")}
+        strokeWidth={1.75}
+        aria-hidden
+      />
+      <div className="leading-none">
+        <p className={cx("font-display font-bold", size === "lg" ? "text-4xl" : "text-2xl", lit ? "text-fire" : "text-ink-2")}>
+          {n}
+        </p>
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-2">{n === 1 ? "día de racha" : "días de racha"}</p>
+      </div>
     </div>
   );
 }

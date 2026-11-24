@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { useLogout } from "@/features/auth/useLogout";
 import { RemindersCard } from "./RemindersCard";
 import { DeleteAccount } from "./DeleteAccount";
+import { BigFlame, useStreaks } from "@/features/streaks/StreaksPage";
 
 type Patch = Partial<Pick<Me, "full_name" | "phone" | "goal" | "greeting" | "theme" | "show_in_podium" | "share_achievements" | "sex">> & {
   height_cm?: string | null;
@@ -107,6 +108,7 @@ export default function ProfilePage() {
         <div className="min-w-0">
           <p className="truncate text-lg font-semibold text-orchid">{me.full_name}</p>
           <p className="truncate text-[15px] text-ink-2">{me.email}</p>
+          {!coach && <ProfileStreak />}
           <div className="mt-1 flex gap-3 text-sm font-semibold">
             <button type="button" onClick={() => fileRef.current?.click()} className="text-orchid hover:underline">
               {me.avatar_url ? "Cambiar foto" : "Subir foto"}
@@ -209,5 +211,16 @@ export default function ProfilePage() {
         {!me.features.coach && <DeleteAccount />}
       </div>
     </div>
+  );
+}
+
+/** Su racha individual, junto a su nombre. */
+function ProfileStreak() {
+  const { data } = useStreaks();
+  if (!data) return null;
+  return (
+    <Link to="/app/rachas" className="mt-2 inline-flex rounded-full bg-surface-2 py-1.5 pl-2 pr-4 hover:bg-line">
+      <BigFlame days={data.overall.days} size="sm" />
+    </Link>
   );
 }

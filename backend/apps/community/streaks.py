@@ -5,6 +5,7 @@
 - Racha de entrenamientos: días de entrenamiento seguidos registrados. Un día de entrenamiento es
   uno con reserva (o en el que de todos modos entrenó). Los días de descanso no rompen la racha.
   Plan con rutina: cuenta si registró su rutina. Plan Clases: cuenta si registró asistencia.
+- Racha general (la grande, en Inicio y Perfil): días seguidos cumpliendo el día completo.
 - Racha con su gym sis / gym bro: días seguidos en que los dos "cumplieron": registraron sus kcal
   dentro de su meta y, si les tocaba entrenar, entrenaron. Cuenta desde que aceptaron.
 
@@ -141,7 +142,9 @@ def individual(member) -> dict:
     start = t - timedelta(days=LOOKBACK_DAYS)
     kcal = _kcal_ok_days(member, start, t)
     training, done, pending = _training(member, start, t)
+    day_ok = {d for d in kcal if d not in training or d in done}  # cumplió el día completo
     return {
+        "overall": {"days": _count(_days_back(start, t), day_ok, t, pending), "today_done": t in day_ok},
         "kcal": {"days": _count(_days_back(start, t), kcal, t), "today_done": t in kcal},
         "training": {
             "days": _count(sorted(training, reverse=True), done, t, pending),
